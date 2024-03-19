@@ -264,6 +264,16 @@ for time in TIMESLOTS:
 for t in TIMESLOTS:
     for r in RESOURCES[1:]:
         for a in ACTIVITIES:
+            # if there is one instance affected by resource r, the activity is done with r --> no other activity can use r at the same time
+            for ins in INSTANCES:
+                for other_a in ACTIVITIES:
+                    if a != other_a:
+                        for i in INSTANCES:
+                            prob += (
+                                actions[t][other_a][i][r] <= 1 - actions[t][a][ins][r]
+                            )
+
+            # the same activity does not use a resource at the same time in different action-instances
             # one resource is not used with more instances than the activity's input set allows
             prob += pl.lpSum(actions[t][a][i][r] for i in INSTANCES) <= len(
                 input_sets[a]
@@ -279,7 +289,7 @@ for t in TIMESLOTS:
                     ) * input_sets[a].count(first_type) == pl.lpSum(
                         actions[t][a][i][r] for i in type_range_map[first_type]
                     ) * input_sets[a].count(input_type)
-                    # amount of instances of instances not bigger than input set allows
+                    # amount of instances of instances not bigger than input set allows (so not more than one action per activity with resource r)
                     prob += pl.lpSum(
                         actions[t][a][i][r] for i in type_range_map[input_type]
                     ) <= input_sets[a].count(input_type)
@@ -408,7 +418,7 @@ for t in TIMESLOTS:
                         " on instance ",
                         i,
                         " with ",
-                        resource_names[r]
+                        resource_names[r],
                     )
 
 # for cell in prob.variables():
