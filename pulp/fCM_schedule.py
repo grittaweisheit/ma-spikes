@@ -11,11 +11,16 @@ No resources, no time constraints, every activity takes 1 timeslot.
 ### define variables for the house ###
 ######################################
 
+# rooms_to_build = 99
+# kitchens_to_build = 11
+# bathrooms_to_build = 22
+# empty_rooms_to_build = 66
+# last_time = 100
 rooms_to_build = 3
 kitchens_to_build = 1
 bathrooms_to_build = 1
 empty_rooms_to_build = 1
-last_time = 20
+last_time = 10
 first_time = 0
 
 #######################################
@@ -34,9 +39,9 @@ install_shower_b = 3
 install_toilet_s = 4
 install_toilet_b = 5
 install_kitchen = 6
-activity_names = ["start", "build_room", "install_shower_t", "install_shower_b", "install_toilet_s", "install_toilet_b", "install_kitchen", "finish"]
+activity_names = ["finish shell", "build_room", "install_shower_t", "install_shower_b", "install_toilet_s", "install_toilet_b", "install_kitchen", "finish"]
 
-duration = [1, 1, 2, 2, 1, 1, 2, 1]
+duration = [1, 2, 2, 2, 1, 1, 2, 1]
 role_requirement = [0, 1, 2, 2, 3, 3, 4, 0]
 resource_consumption = [0, 1, 1, 1, 1, 1, 2, 0]
 ### resources ###
@@ -96,9 +101,9 @@ prob += endtime
 
 # start and finish do not need resources
 for t in TIMESLOTS:
-    prob += pl.lpSum(actions[t][start_activity][0][i] for i in INSTANCES) <= 1
+    prob += pl.lpSum(actions[t][start_activity][0][r] for r in RESOURCES) <= 1
     prob += (
-        pl.lpSum(actions[t][start_activity][0][i] for i in INSTANCES)
+        pl.lpSum(actions[t][start_activity][0][r] for r in RESOURCES)
         <= actions[t][start_activity][0][0]
     )
 
@@ -168,10 +173,16 @@ for time in TIMESLOTS:
         for i in INSTANCES:
             # duration can not exeed time limit if a started at t
             prob += (time + duration[act]) * actions[time][act][i][0] <= endtime + 1
-            # if a started and duration > 1, the next time slots are also blocked
-            for j in range(1, min((duration[act] - 1, last_time - time))):
+            # if a started and duration > 1, the next time slots for i are also blocked
+            for j in range(1, min((duration[act], last_time - time))):
                 for a in ACTIVITIES:
                     prob += actions[time + j][a][i][0] <= 1 - actions[time][act][i][0]
+            for r in RESOURCES:
+                # if r used this time, r is blocked for the next duration-1 time slots
+                for j in range(1, min((duration[act], last_time - time))):
+                    for a in ACTIVITIES:
+                        for ins in INSTANCES:
+                            prob += actions[time + j][a][ins][r] <= 1 - actions[time][act][i][r]
 
 ### resource constraints ###
 for t in TIMESLOTS:
