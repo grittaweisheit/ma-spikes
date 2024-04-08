@@ -16,21 +16,16 @@ No resources, no time constraints, every activity takes 1 timeslot.
 ### define variables for the house ###
 ######################################
 
-# rooms_to_build = 99
-# kitchens_to_build = 11
-# bathrooms_to_build = 22
-# empty_rooms_to_build = 66
-# last_time = 100
-rooms = 3
-kitchens = 1
-showers = 1
-toilets = 1
+rooms = 100
+kitchens = 10
+showers = 15
+toilets = 15
 instance_count = rooms + kitchens + showers + toilets
 
-kitchens_to_build = 1
-bathrooms_to_build = 1
-empty_rooms_to_build = 1
-last_time = 10
+kitchens_to_build = 20
+bathrooms_to_build = 20
+empty_rooms_to_build = 60
+last_time = 110
 first_time = 0
 
 #######################################
@@ -83,7 +78,7 @@ availability = [
     range(first_time, last_time + 1),
     range(first_time, last_time + 1),
     range(first_time, last_time + 1),
-    range(first_time, 2),
+    range(first_time, last_time + 1),
     range(first_time, last_time + 1),
 ]
 resource_ids = [
@@ -139,19 +134,15 @@ def get_type(instance_index):
         if instance_index in type_range_map[type_index]:
             return type_index
 
-
-# activities
 ACTIVITIES = range(start_activity, end_activity + 1)
 RACTIVITIES = range(
     start_activity + 1, end_activity
 )  # real activities (not start and end)
-# time slots
 TIMESLOTS = range(first_time, last_time + 1)
-# resources
 RESOURCES = resource_ids
 
 # we have a decision variable whether the activity is done in the room at the time slot with this resource for all possibilities
-# actions[t][a][i][0] symbolizes whether the activity is started at time t in room i
+# actions[t][a][i][0] symbolizes whether the activity is started at time t with instance i
 actions = pl.LpVariable.dicts(
     "Action", (TIMESLOTS, ACTIVITIES, INSTANCES, RESOURCES), cat=pl.LpBinary
 )
