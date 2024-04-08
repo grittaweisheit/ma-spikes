@@ -1,5 +1,10 @@
 import pulp as pl
 
+# TODO: think aubout data links.
+
+# TODO: think about parallel usage (no blocking anymore) of data instances if they are not modified by the activities.
+# TODO:     Maybe split activities into categories and formulate constraints on those as a base
+
 # initialize the Problem
 prob = pl.LpProblem("fCM_room_Schedule", pl.LpMinimize)
 """ 
@@ -64,13 +69,23 @@ activity_names = [
 duration = [1, 1, 2, 2, 1, 1, 2, 1, 1, 1, 1]
 role_requirement = [0, 1, 2, 2, 3, 3, 4, 5, 5, 5, 0]
 resource_consumption = [0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 0]
-input_sets = [[], [0], [0, 2], [0, 2], [0, 3], [0, 3], [0, 1], [1], [2], [3], []]
 
 data_types = [0, 1, 2, 3]  # room, kitchen, shower, toilet
+input_sets = [[], [0], [0, 2], [0, 2], [0, 3], [0, 3], [0, 1], [1], [2], [3], []]
+
 ### resources ###
 
 resource_names = ["-", "Bob", "Sandy", "Kay", "Tina", "Finn", "Fiona"]
 role_names = ["-", "builder", "shower-crew", "toilet-crew", "kitchen-crew", "buyer"]
+availability = [
+    range(first_time, last_time + 1),
+    range(first_time, last_time + 1),
+    range(first_time, last_time + 1),
+    range(first_time, last_time + 1),
+    range(first_time, last_time + 1),
+    range(first_time, 2),
+    range(first_time, last_time + 1),
+]
 resource_ids = [
     0,
     1,
@@ -127,7 +142,9 @@ def get_type(instance_index):
 
 # activities
 ACTIVITIES = range(start_activity, end_activity + 1)
-RACTIVITIES = range(start_activity + 1, end_activity)
+RACTIVITIES = range(
+    start_activity + 1, end_activity
+)  # real activities (not start and end)
 # time slots
 TIMESLOTS = range(first_time, last_time + 1)
 # resources
@@ -217,7 +234,7 @@ prob += (
     == starttime * instance_count
 )
 
-### generat activity instance constraints ###
+### general activity instance constraints ###
 
 for t in TIMESLOTS:
     # on every instance there can be max 1 activity at a time
@@ -261,6 +278,7 @@ for time in TIMESLOTS:
                             )
 
 ### resource constraints ###
+
 for t in TIMESLOTS:
     for r in RESOURCES[1:]:
         for a in ACTIVITIES:
@@ -297,6 +315,13 @@ for t in TIMESLOTS:
                     if get_type(i) not in input_sets[a]:
                         prob += actions[t][a][i][r] == 0
 
+        # each resource is available when it is used
+        if t not in availability[r]:
+            prob += (
+                pl.lpSum(actions[t][a][i][r] for a in ACTIVITIES for i in INSTANCES)
+                == 0
+            )
+
     # each activity is executed with its required resources
     for a in ACTIVITIES[start_activity + 1 : end_activity]:
         for i in INSTANCES:
@@ -310,6 +335,7 @@ for t in TIMESLOTS:
             prob += pl.lpSum(
                 actions[t][a][i][r] for r in roles_resources_map[role_requirement[a]]
             ) == pl.lpSum(actions[t][a][i][r] for r in RESOURCES[1:])
+
 
 ### activity / data dependencies ###
 # TODO: maybe adjust for reacurring of activities on one instance
