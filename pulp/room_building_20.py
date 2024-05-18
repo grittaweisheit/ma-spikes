@@ -21,16 +21,16 @@ def do():
     ### define variables for the house ###
     ######################################
 
-    rooms = 50
-    kitchens = 10
-    showers = 15
-    toilets = 15
+    rooms = 20
+    kitchens = 4
+    showers = 7
+    toilets = 7
     instance_count = rooms + kitchens + showers + toilets
 
-    kitchens_to_build = 10
-    bathrooms_to_build = 15
-    empty_rooms_to_build = 25
-    last_time = 70
+    kitchens_to_build = 4
+    bathrooms_to_build = 5
+    empty_rooms_to_build = 11
+    last_time = 30
     first_time = 0
 
     #######################################
@@ -472,7 +472,8 @@ def do():
     print("goals done... start solving")
 
     # solve the problem
-    prob.solve(pl.CPLEX_CMD(threads=4))
+    # print(pl.listSolvers())
+    prob.solve(pl.PULP_CBC_CMD(msg=1, threads=16))
 
     # print the solution
     for t in TIMESLOTS:

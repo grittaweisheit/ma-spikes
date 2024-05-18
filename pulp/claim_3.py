@@ -1,6 +1,6 @@
-# from memory_profiler import profile
-import pulp as pl
 import array
+from memory_profiler import profile
+import pulp as pl
 
 # TODO: think aubout data links.
 
@@ -8,7 +8,7 @@ import array
 # TODO:     Maybe split activities into categories and formulate constraints on those as a base
 
 
-# @profile
+@profile
 def do():
     # initialize the Problem
     prob = pl.LpProblem("fCM_room_Schedule", pl.LpMinimize)
@@ -17,20 +17,18 @@ def do():
     No resources, no time constraints, every activity takes 1 timeslot. 
     """
 
-    ######################################
-    ### define variables for the house ###
-    ######################################
+    ########################################
+    ### define variables for the process ###
+    ########################################
 
-    rooms = 50
-    kitchens = 10
-    showers = 15
-    toilets = 15
-    instance_count = rooms + kitchens + showers + toilets
+    claims = 3
+    assessments = 1
+    instance_count = claims + assessments
 
-    kitchens_to_build = 10
-    bathrooms_to_build = 15
-    empty_rooms_to_build = 25
-    last_time = 70
+    claims_to_decide = 3
+    assessments_to_make = 1
+
+    last_time = 10
     first_time = 0
 
     #######################################
@@ -40,115 +38,88 @@ def do():
     ### activities ###
 
     # start and finish are fixed
-    end_activity = 10
     start_activity = 0
-    # start, build room, install shower(t), install shower(b), install toilet(s), install toilet(b), install kitchen, buy kitchen, buy shower, buy toilet,  finish house (end)
-    build_room = 1
-    install_shower_t = 2
-    install_shower_b = 3
-    install_toilet_s = 4
-    install_toilet_b = 5
-    install_kitchen = 6
-    buy_kitchen = 7
-    buy_shower = 8
-    buy_toilet = 9
+    end_activity = 5
+    # start, record, assess, question, decide, finish (end)
+    record_claim = 1
+    assess_claim = 2
+    question_claim_b = 3
+    question_claim_a = 4
+    decide_claim_b = 5
+    decide_claim_a = 4
     activity_names = [
-        "finish shell",
-        "build_room",
-        "install_shower_t",
-        "install_shower_b",
-        "install_toilet_s",
-        "install_toilet_b",
-        "install_kitchen",
-        "buy_kitchen",
-        "buy_shower",
-        "buy_toilet",
+        "start",
+        "record claim",
+        "assess claim",
+        "question claim (basic)",
+        "question claim (request assessment)",
+        "decide claim (basic)",
+        "decide claim (with assessment)",
         "finish",
     ]
 
-    duration = [1, 1, 2, 2, 1, 1, 2, 1, 1, 1, 1]
-    role_requirement = [0, 1, 2, 2, 3, 3, 4, 5, 5, 5, 0]
-    resource_consumption = [0, 1, 1, 1, 1, 1, 2, 1, 1, 1, 0]
+    duration = [1, 1, 1, 1, 1, 2, 2, 1]
+    role_requirement = [0, 1, 2, 1, 1, 1, 1, 0]
+    resource_consumption = [0, 1, 1, 1, 1, 2, 2, 0]
 
-    data_types = [0, 1, 2, 3]  # room, kitchen, shower, toilet
-    input_sets = [[0], [0], [0, 2], [0, 2], [0, 3], [0, 3], [0, 1], [1], [2], [3], [0]]
+    data_types = [0, 1]  # claim, assessment
+    input_sets = [[0], [0], [1], [0], [0], [0, 1], [0], [0]]
 
     ### resources ###
 
-    resource_names = ["-", "Bob", "Sandy", "Kay", "Tina", "Finn", "Fiona"]
-    role_names = ["-", "builder", "shower-crew", "toilet-crew", "kitchen-crew", "buyer"]
+    resource_names = ["-", "Wanda", "Willy", "Emil", "Erika"]
+    role_names = ["-", "worker", "expert"]
     availability = [
         range(first_time, last_time + 1),
         range(first_time, last_time + 1),
         range(first_time, last_time + 1),
         range(first_time, last_time + 1),
         range(first_time, last_time + 1),
-        range(first_time, last_time + 1),
+        range(first_time, 2),
         range(first_time, last_time + 1),
     ]
-    resource_ids = [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-    ]  # no resource / started, Bob, Sandy, Kay, Tina, Finn, Fiona
-    roles = [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-    ]  # nothing, builder, shower-crew, toilet-crew, kitchen-crew, buyer
+    resource_ids = [0, 1, 2, 3, 4]  # no resource / started, Wanda, Willy, Emil, Erika
+    roles = [0, 1, 2]  # nothing, builder, shower-crew, toilet-crew, kitchen-crew, buyer
     resource_roles_map = [
         [0],  # no role, no resource / started
-        [1],  # Bob -> builder
-        [2, 4],  # Sandy -> shower-crew, kitchen-crew
-        [4],  # Kay -> kitchen-crew
-        [3],  # Tina -> toilet-crew
-        [5],  # Finn -> buyer
-        [5],  # Fiona -> buyer
+        [1],  # Wanda -> worker
+        [1],  # Willy -> worker
+        [2],  # Emil -> expert, worker
+        [2],  # Erika -> expert
     ]
     roles_resources_map = [
         [0],  # no role, no resource / started
-        [1],  # Builder: Bob
-        [2],  # Shower-Crew: Sandy
-        [4],  # Toilet-Crew: Tina
-        [2, 3],  # Kitchen-Crew: Sandy, Kay
-        [5, 6],  # Buyer: Finn, Fiona
+        [1, 2, 3],  # Worker: Wanda, Willy, Emil
+        [3, 4],  # Expert: Emil, Erika
     ]
 
     #####################################
     ### define the decision variables ###
     #####################################
 
-    # rooms, kitchens, showers, toilets
-    INSTANCES = range(instance_count)
-    rooms_range = range(rooms)
-    kitchen_range = range(rooms, rooms + kitchens)
-    shower_range = range(rooms + kitchens, rooms + kitchens + showers)
-    toilet_range = range(
-        rooms + kitchens + showers, rooms + kitchens + showers + toilets
-    )
-    type_range_map = [rooms_range, kitchen_range, shower_range, toilet_range]
+    # claims, assessments
+    INSTANCES = array.array("b", range(instance_count))
+    claims_range = range(claims)
+    assessments_range = range(claims, claims + assessments)
+    type_range_map = [claims_range, assessments_range]
 
     def get_type(instance_index):
         for type_index in range(len(type_range_map)):
             if instance_index in type_range_map[type_index]:
                 return type_index
 
+    # activities
     ACTIVITIES = array.array("b", range(start_activity, end_activity + 1))
     RACTIVITIES = array.array(
         "b", range(start_activity + 1, end_activity)
     )  # real activities (not start and end)
+    # time slots
     TIMESLOTS = array.array("b", range(first_time, last_time + 1))
+    # resources
     RESOURCES = array.array("b", resource_ids)
 
     # we have a decision variable whether the activity is done in the room at the time slot with this resource for all possibilities
-    # actions[t][a][i][0] symbolizes whether the activity is started at time t with instance i
+    # actions[t][a][i][0] symbolizes whether the activity is started at time t in room i
     actions = pl.LpVariable.dicts(
         "Action", (TIMESLOTS, ACTIVITIES, INSTANCES, RESOURCES), cat=pl.LpBinary
     )
@@ -235,8 +206,6 @@ def do():
         == starttime * instance_count
     )
 
-    print("start and end constraints done")
-
     ### general activity instance constraints ###
 
     for t in TIMESLOTS:
@@ -259,8 +228,6 @@ def do():
                 # no instances of other types are affected
                 if get_type(i) not in input_sets[a]:
                     prob += actions[t][a][i][0] == 0
-
-    print("general activity instance constraints done")
 
     ### durations are considered -> if an activity is started at t with i, it blocks the next time slots during it's duration
     for time in TIMESLOTS:
@@ -286,37 +253,29 @@ def do():
                     # if r used this time, r is blocked for the next duration-1 time slots
                     # for j in range(1, min((duration[act], last_time - time))):
                     #     for a in ACTIVITIES:
-                    #         for ins in INSTANCES:
+                    #         for ins in INSTANCES:  # TODO muss das hier sein oder geht auch auf einer höheren ebene?
                     #             prob += (
                     #                 actions[time + j][a][ins][r]
                     #                 <= 1 - actions[time][act][i][r]
                     #            )
-    print("duration constraints done")
 
     ### resource constraints ###
 
     for t in TIMESLOTS:
         for r in RESOURCES[1:]:
-            # each resource is available when it is used
-            if t not in availability[r]:
-                prob += (
-                    pl.lpSum(actions[t][a][i][r] for a in ACTIVITIES for i in INSTANCES)
-                    == 0
-                )
-                pass
             for a in ACTIVITIES:
-                # if there is at least one instance affected by resource r, the activity is done with r --> no other activity can use r at the same time
-                # TODO / DONE? make this RAM freindly
+                # if there is one instance affected by resource r, the activity is done with r --> no other activity can use r at the same time
                 # taken from https://stackoverflow.com/a/26875847
                 other_as = ACTIVITIES[:]  # fastest way to copy
                 other_as.remove(a)
                 # NOTE: (1 - pl.lpSum(actions[t][a][i][r] for i in INSTANCES)) can be negative if a is started with several instances. Can only be as many as input set allows -> divided by input set it is 1 or 0
                 prob += pl.lpSum(
                     actions[t][other_a][i][r] for other_a in other_as for i in INSTANCES
-                ) <= (1 - pl.lpSum(actions[t][a][i][r] for i in INSTANCES)/len(input_sets[a])) * len(
-                    other_as
-                ) * len(INSTANCES)
-
+                ) <= (
+                    1
+                    - pl.lpSum(actions[t][a][i][r] for i in INSTANCES)
+                    / len(input_sets[a])
+                ) * len(other_as) * len(INSTANCES)
                 # for ins in INSTANCES:
                 #     prob += pl.lpSum(
                 #         actions[t][other_a][i][r]
@@ -356,6 +315,13 @@ def do():
                         if get_type(i) not in input_sets[a]:
                             prob += actions[t][a][i][r] == 0
 
+            # each resource is available when it is used
+            if t not in availability[r]:
+                prob += (
+                    pl.lpSum(actions[t][a][i][r] for a in ACTIVITIES for i in INSTANCES)
+                    == 0
+                )
+
         # each activity is executed with its required resources
         for a in ACTIVITIES[start_activity + 1 : end_activity]:
             for i in INSTANCES:
@@ -371,108 +337,104 @@ def do():
                     for r in roles_resources_map[role_requirement[a]]
                 ) == pl.lpSum(actions[t][a][i][r] for r in RESOURCES[1:])
 
-    print("resource constraints done")
+        ### OLC constraints ###
+        # all states of claim can only be reached once (same activity only executed once on same instance)
+        for i in claims_range:
+            for a in ACTIVITIES:
+                prob += pl.lpSum(actions[t][a][i][0] for t in TIMESLOTS) <= 1
+            # only question_claim_b or question_claim_a
+            prob += (
+                pl.lpSum(
+                    actions[t][question_claim_b][i][0]
+                    + actions[t][question_claim_a][i][0]
+                    for t in TIMESLOTS
+                )
+                <= 1
+            )
+            # only decide_claim_b or decide_claim_a
+            prob += (
+                pl.lpSum(
+                    actions[t][decide_claim_a][i][0] + actions[t][decide_claim_b][i][0]
+                    for t in TIMESLOTS
+                )
+                <= 1
+            )
+        # same for assessments
+        for i in assessments_range:
+            for a in ACTIVITIES:
+                prob += pl.lpSum(actions[t][a][i][0] for t in TIMESLOTS) <= 1
 
     ### activity / data dependencies ###
-    # TODO: maybe adjust for reacurring of activities on one instance
     for i in INSTANCES:
         for time in TIMESLOTS:
             times_before = range(0, time)
-            # start before build room (redundant)
-            if i in rooms_range:
-                prob += pl.lpSum(
-                    actions[t][start_activity][i][0] for t in times_before
-                ) >= pl.lpSum(actions[t][build_room][i][0] for t in times_before)
 
-            # build room or install toilet before install shower,
-            if i in rooms_range:
+            # question_a before assess
+            if i in assess_claim:
                 prob += pl.lpSum(
-                    actions[t][build_room][i][0] - actions[t][install_toilet_b][i][0]
-                    for t in times_before
-                ) >= pl.lpSum(actions[t][install_shower_b][i][0] for t in times_before)
+                    actions[t][question_claim_a][i][0] for t in times_before
+                ) >= pl.lpSum(actions[t][assess_claim][i][0] for t in times_before)
+
+            # record before question
+            if i in assessments_range:
                 prob += pl.lpSum(
-                    actions[t][install_toilet_b][i][0] for t in times_before
-                ) >= pl.lpSum(actions[t][install_shower_t][i][0] for t in times_before)
-            # and buy shower before install shower
-            if i in shower_range:
-                prob += pl.lpSum(
-                    actions[t][buy_shower][i][0] for t in times_before
+                    actions[t][record_claim][i][0] for t in times_before
                 ) >= pl.lpSum(
-                    actions[t][install_shower_t][i][0] for t in times_before
-                ) + pl.lpSum(actions[t][install_shower_b][i][0] for t in times_before)
-
-            # build room or install shower before install toilet,
-            if i in rooms_range:
-                prob += pl.lpSum(
-                    actions[t][build_room][i][0] - actions[t][install_shower_b][i][0]
+                    actions[t][question_claim_a][i][0]
+                    + actions[t][question_claim_b][i][0]
                     for t in times_before
-                ) >= pl.lpSum(actions[t][install_toilet_b][i][0] for t in times_before)
-                prob += pl.lpSum(
-                    actions[t][install_shower_b][i][0] for t in times_before
-                ) >= pl.lpSum(actions[t][install_toilet_s][i][0] for t in times_before)
-            # and buy toilet before install toilet
-            if i in toilet_range:
-                prob += pl.lpSum(
-                    actions[t][buy_toilet][i][0] for t in times_before
-                ) >= pl.lpSum(
-                    actions[t][install_toilet_s][i][0] for t in times_before
-                ) + pl.lpSum(actions[t][install_toilet_b][i][0] for t in times_before)
+                )
 
-            # build room before install kitchen (and not bathroom),
-            if i in rooms_range:
+            # question_b before decide_b
+            if i in claims_range:
                 prob += pl.lpSum(
-                    actions[t][build_room][i][0]
-                    - actions[t][install_toilet_b][i][0]
-                    - actions[t][install_shower_b][i][0]
-                    for t in times_before
-                ) >= pl.lpSum(actions[t][install_kitchen][i][0] for t in times_before)
-            # and buy kitchen before install kitchen
-            if i in kitchen_range:
-                prob += pl.lpSum(
-                    actions[t][buy_kitchen][i][0] for t in times_before
-                ) >= pl.lpSum(actions[t][install_kitchen][i][0] for t in times_before)
+                    actions[t][question_claim_b][i][0] for t in times_before
+                ) >= pl.lpSum(actions[t][decide_claim_b][i][0] for t in times_before)
 
-    print("activity / data dependencies done")
+            # assess and question_a before decide_a
+            if i in claims_range:
+                # questoion_a before decide_a on claim
+                prob += pl.lpSum(
+                    actions[t][question_claim_a][i][0] for t in times_before
+                ) >= pl.lpSum(actions[t][decide_claim_a][i][0] for t in times_before)
+            if i in assessments_range:
+                # assess before decide_a on assessment
+                prob += pl.lpSum(
+                    actions[t][assess_claim][i][0] for t in times_before
+                ) >= pl.lpSum(actions[t][decide_claim_a][i][0] for t in times_before)
 
     ########################
     ### define the goals ###
     ########################
 
-    ### goal = empty rooms, kitchens, bathrooms
-    # kitchens
+    ### goal = claims, assessments
+    # claims to decide
     prob += (
         pl.lpSum(
-            actions[t][install_kitchen][i][0] for t in TIMESLOTS for i in rooms_range
-        )
-        >= kitchens_to_build
-    )
-    # bathrooms
-    prob += (
-        pl.lpSum(
-            actions[t][install_toilet_s][i][0] + actions[t][install_shower_t][i][0]
+            actions[t][decide_claim_a][i][0] + actions[t][decide_claim_b][i][0]
             for t in TIMESLOTS
-            for i in rooms_range
+            for i in claims_range
         )
-        >= bathrooms_to_build
+        >= claims_to_decide
     )
-    # empty rooms
+    # assessments to make
     prob += (
         pl.lpSum(
-            pl.lpSum(actions[t][build_room][i][0] for t in TIMESLOTS)
-            - pl.lpSum(
-                actions[t][install_kitchen][i][0]
-                + actions[t][install_toilet_b][i][0]
-                + actions[t][install_shower_b][i][0]
-                for t in TIMESLOTS
-            )
-            for i in rooms_range
+            actions[t][assess_claim][i][0] for t in TIMESLOTS for i in assessments_range
         )
-        >= empty_rooms_to_build
+        >= assessments_to_make
     )
-    print("goals done... start solving")
+    prob += (
+        pl.lpSum(
+            actions[t][decide_claim_a][i][0]
+            for t in TIMESLOTS
+            for i in assessments_range
+        )
+        >= assessments_to_make
+    )
 
     # solve the problem
-    prob.solve(pl.CPLEX_CMD(threads=4))
+    prob.solve()
 
     # print the solution
     for t in TIMESLOTS:
@@ -489,9 +451,9 @@ def do():
                             resource_names[r],
                         )
 
-        # for cell in prob.variables():
-        #     if cell.varValue == 1:
-        #         print(cell.name, "=", cell.varValue)
+    # for cell in prob.variables():
+    #     if cell.varValue == 1:
+    #         print(cell.name, "=", cell.varValue)
 
 
 do()
