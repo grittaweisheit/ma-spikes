@@ -8,7 +8,7 @@ import pulp as pl
 # TODO:     Maybe split activities into categories and formulate constraints on those as a base
 
 
-@profile
+#@profile
 def do():
     # initialize the Problem
     prob = pl.LpProblem("fCM_room_Schedule", pl.LpMinimize)
@@ -238,6 +238,8 @@ def do():
         == starttime * instance_count
     )
 
+    print("start and end constraints done")
+
     ### general activity instance constraints ###
 
     for t in TIMESLOTS:
@@ -260,6 +262,8 @@ def do():
                 # no instances of other types are affected
                 if get_type(i) not in input_sets[a]:
                     prob += actions[t][a][i][0] == 0
+
+    print("general activity instance constraints done")
 
     ### durations are considered -> if an activity is started at t with i, it blocks the next time slots during it's duration
     for time in TIMESLOTS:
@@ -285,29 +289,37 @@ def do():
                     # if r used this time, r is blocked for the next duration-1 time slots
                     # for j in range(1, min((duration[act], last_time - time))):
                     #     for a in ACTIVITIES:
-                    #         for ins in INSTANCES:  # TODO muss das hier sein oder geht auch auf einer höheren ebene?
+                    #         for ins in INSTANCES:
                     #             prob += (
                     #                 actions[time + j][a][ins][r]
                     #                 <= 1 - actions[time][act][i][r]
                     #            )
+    print("duration constraints done")
 
     ### resource constraints ###
 
     for t in TIMESLOTS:
         for r in RESOURCES[1:]:
+            # each resource is available when it is used
+            if t not in availability[r]:
+                prob += (
+                    pl.lpSum(actions[t][a][i][r] for a in ACTIVITIES for i in INSTANCES)
+                    == 0
+                )
+                pass
             for a in ACTIVITIES:
-                # if there is one instance affected by resource r, the activity is done with r --> no other activity can use r at the same time
+                # if there is at least one instance affected by resource r, the activity is done with r --> no other activity can use r at the same time
+                # TODO / DONE? make this RAM freindly
                 # taken from https://stackoverflow.com/a/26875847
                 other_as = ACTIVITIES[:]  # fastest way to copy
                 other_as.remove(a)
                 # NOTE: (1 - pl.lpSum(actions[t][a][i][r] for i in INSTANCES)) can be negative if a is started with several instances. Can only be as many as input set allows -> divided by input set it is 1 or 0
                 prob += pl.lpSum(
                     actions[t][other_a][i][r] for other_a in other_as for i in INSTANCES
-                ) <= (
-                    1
-                    - pl.lpSum(actions[t][a][i][r] for i in INSTANCES)
-                    / len(input_sets[a])
-                ) * len(other_as) * len(INSTANCES)
+                ) <= (1 - pl.lpSum(actions[t][a][i][r] for i in INSTANCES)/len(input_sets[a])) * len(
+                    other_as
+                ) * len(INSTANCES)
+
                 # for ins in INSTANCES:
                 #     prob += pl.lpSum(
                 #         actions[t][other_a][i][r]
@@ -347,13 +359,6 @@ def do():
                         if get_type(i) not in input_sets[a]:
                             prob += actions[t][a][i][r] == 0
 
-            # each resource is available when it is used
-            if t not in availability[r]:
-                prob += (
-                    pl.lpSum(actions[t][a][i][r] for a in ACTIVITIES for i in INSTANCES)
-                    == 0
-                )
-
         # each activity is executed with its required resources
         for a in ACTIVITIES[start_activity + 1 : end_activity]:
             for i in INSTANCES:
@@ -368,6 +373,8 @@ def do():
                     actions[t][a][i][r]
                     for r in roles_resources_map[role_requirement[a]]
                 ) == pl.lpSum(actions[t][a][i][r] for r in RESOURCES[1:])
+
+    print("resource constraints done")
 
     ### activity / data dependencies ###
     # TODO: maybe adjust for reacurring of activities on one instance
@@ -427,6 +434,9 @@ def do():
                 prob += pl.lpSum(
                     actions[t][buy_kitchen][i][0] for t in times_before
                 ) >= pl.lpSum(actions[t][install_kitchen][i][0] for t in times_before)
+
+    print("activity / data dependencies done")
+
     ########################
     ### define the goals ###
     ########################
@@ -462,6 +472,7 @@ def do():
         )
         >= empty_rooms_to_build
     )
+    print("goals done... start solving")
 
     # solve the problem
     prob.solve()
