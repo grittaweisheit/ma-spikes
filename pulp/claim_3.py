@@ -4,7 +4,7 @@ import pulp as pl
 
 # TODO: think aubout data links.
 
-# TODO: think about parallel usage (no blocking anymore) of data instances if they are not modified by the activities.
+# TODO: think about parallel usage (no blocking anymore) of data objects if they are not modified by the activities.
 # TODO:     Maybe split activities into categories and formulate constraints on those as a base
 
 
@@ -22,7 +22,7 @@ def do():
 
     claims = 3
     assessments = 1
-    instance_count = claims + assessments
+    object_count = claims + assessments
 
     claims_to_decide = 3
     assessments_to_make = 1
@@ -63,7 +63,7 @@ def do():
 
     data_types = [0, 1]  # claim, assessment
     type_names = ["claim", "assessment"]
-    instance_sets = [[0], [0], [1], [0], [0, 1], [0], [0, 1], [0]]
+    object_sets = [[0], [0], [1], [0], [0, 1], [0], [0, 1], [0]]
 
     ### resources ###
 
@@ -96,14 +96,14 @@ def do():
     #####################################
 
     # claims, assessments
-    INSTANCES = range(instance_count)
+    OBJECTS = range(object_count)
     claims_range = range(claims)
     assessments_range = range(claims, claims + assessments)
     type_range_map = [claims_range, assessments_range]
 
-    def get_type(instance_index):
+    def get_type(object_index):
         for type_index in range(len(type_range_map)):
-            if instance_index in type_range_map[type_index]:
+            if object_index in type_range_map[type_index]:
                 return type_index
 
     ACTIVITIES = array.array("b", range(start_activity, end_activity + 1))
@@ -114,9 +114,9 @@ def do():
     RESOURCES = array.array("b", resource_ids)
 
     # we have a decision variable whether the activity is done in the room at the time slot with this resource for all possibilities
-    # actions[t][a][i][0] symbolizes whether the activity is started at time t with instance i
+    # actions[t][a][o][0] symbolizes whether the activity is started at time t with object o
     actions = pl.LpVariable.dicts(
-        "Action", (TIMESLOTS, ACTIVITIES, INSTANCES, RESOURCES), cat=pl.LpBinary
+        "Action", (TIMESLOTS, ACTIVITIES, OBJECTS, RESOURCES), cat=pl.LpBinary
     )
     endtime = pl.LpVariable("Endtime", lowBound=0, upBound=last_time, cat=pl.LpInteger)
     starttime = pl.LpVariable(
@@ -148,114 +148,124 @@ def do():
     prob += pl.lpSum(actions[t][end_activity][0][0] for t in TIMESLOTS) == 1
 
     for t in TIMESLOTS:
-        # start and finish happen on all instances at the same time
+        # start and finish happen on all objects at the same time
         prob += (
-            pl.lpSum(actions[t][start_activity][i][0] for i in INSTANCES)
-            == instance_count * actions[t][start_activity][0][0]
+            pl.lpSum(actions[t][start_activity][o][0] for o in OBJECTS)
+            == object_count * actions[t][start_activity][0][0]
         )
-        prob += pl.lpSum(
-            actions[t][start_activity][i][0] for i in INSTANCES
-        ) == pl.lpSum(actions[t][start_activity][i][0] for i in INSTANCES)
+        prob += pl.lpSum(actions[t][start_activity][o][0] for o in OBJECTS) == pl.lpSum(
+            actions[t][start_activity][o][0] for o in OBJECTS
+        )
         prob += (
-            pl.lpSum(actions[t][end_activity][i][0] for i in INSTANCES)
-            == instance_count * actions[t][end_activity][0][0]
+            pl.lpSum(actions[t][end_activity][o][0] for o in OBJECTS)
+            == object_count * actions[t][end_activity][0][0]
         )
-        prob += pl.lpSum(actions[t][end_activity][i][0] for i in INSTANCES) == pl.lpSum(
-            actions[t][end_activity][i][0] for i in INSTANCES
+        prob += pl.lpSum(actions[t][end_activity][o][0] for o in OBJECTS) == pl.lpSum(
+            actions[t][end_activity][o][0] for o in OBJECTS
         )
 
     # after finish and before start nothing happens
     # before start and after end, no activity is done
     for t in TIMESLOTS:
         for a in ACTIVITIES:
-            for i in INSTANCES:
+            for o in OBJECTS:
                 # endtime is the last time a task is done
-                prob += actions[t][a][i][0] * t <= endtime
+                prob += actions[t][a][o][0] * t <= endtime
                 # starttime is the first time a task is done
                 # if task a is not done at t, the value is set to last_tim with 1-0*last_time and thus satisfies the constraint because last_time >= starttime
                 prob += (
-                    actions[t][a][i][0] * t + (1 - actions[t][a][i][0]) * last_time
+                    actions[t][a][o][0] * t + (1 - actions[t][a][o][0]) * last_time
                     >= starttime
                 )
 
     # end task is done at endtime and only then
     prob += (
-        pl.lpSum(actions[t][end_activity][i][0] for t in TIMESLOTS for i in INSTANCES)
-        == instance_count
+        pl.lpSum(actions[t][end_activity][o][0] for t in TIMESLOTS for o in OBJECTS)
+        == object_count
     )
     prob += (
-        pl.lpSum(
-            actions[t][end_activity][i][0] * t for t in TIMESLOTS for i in INSTANCES
-        )
-        == endtime * instance_count
+        pl.lpSum(actions[t][end_activity][o][0] * t for t in TIMESLOTS for o in OBJECTS)
+        == endtime * object_count
     )
     # start task is done at starttime and only then
     prob += (
-        pl.lpSum(actions[t][start_activity][i][0] for t in TIMESLOTS for i in INSTANCES)
-        == instance_count
+        pl.lpSum(actions[t][start_activity][o][0] for t in TIMESLOTS for o in OBJECTS)
+        == object_count
     )
     prob += (
         pl.lpSum(
-            actions[t][start_activity][i][0] * t for t in TIMESLOTS for i in INSTANCES
+            actions[t][start_activity][o][0] * t for t in TIMESLOTS for o in OBJECTS
         )
-        == starttime * instance_count
+        == starttime * object_count
     )
 
     print("start and end constraints done")
 
-    ### general activity instance constraints ###
+    ### general activity object constraints ###
 
     for t in TIMESLOTS:
-        # on every instance there can be max 1 activity at a time
-        for i in INSTANCES:
-            prob += pl.lpSum(actions[t][a][i][0] for a in ACTIVITIES) <= 1
+        # on every object there can be max 1 activity at a time
+        for o in OBJECTS:
+            prob += pl.lpSum(actions[t][a][o][0] for a in ACTIVITIES) <= 1
 
-        # all real activities affect instances in line with their input set requirements
+        # all real activities affect objects in line with their input set requirements
         for a in RACTIVITIES:
-            # amount of instances of each type matches with occurrences in input set (or all zero) / relations are the same
-            first_type = instance_sets[a][0]
-            for input_type_index in range(1, len(instance_sets[a])):
-                input_type = instance_sets[a][input_type_index]
-                prob += pl.lpSum(
-                    actions[t][a][i][0] for i in type_range_map[input_type]
-                ) * instance_sets[a].count(first_type) == pl.lpSum(
-                    actions[t][a][i][0] for i in type_range_map[first_type]
-                ) * instance_sets[a].count(input_type)
-            for i in INSTANCES:
-                # no instances of other types are affected
-                if get_type(i) not in instance_sets[a]:
-                    prob += actions[t][a][i][0] == 0
+            # amount of objects of each type matches with occurrences in input set (or all zero) / relations are the same
+            # first_type = object_sets[a][0]
+            # for input_type_index in range(1, len(object_sets[a])):
+            #     input_type = object_sets[a][input_type_index]
+            #     prob += pl.lpSum(
+            #         actions[t][a][o][0] for o in type_range_map[input_type]
+            #     ) * object_sets[a].count(first_type) == pl.lpSum(
+            #         actions[t][a][o][0] for o in type_range_map[first_type]
+            #     ) * object_sets[a].count(input_type)
 
-    print("general activity instance constraints done")
+            # no objects of other types are affected
+            for o in OBJECTS:
+                if get_type(o) not in object_sets[a]:
+                    prob += actions[t][a][o][0] == 0
 
-    ### durations are considered -> if an activity is started at t with i, it blocks the next time slots during it's duration
+            # amount of objects of each type matches with occurrences in input set (or all zero) / relations are the same (r = 0)
+            # and same resources used on objects forming a valid input set (r > 0)
+            first_class = object_sets[a][0]
+            for r in RESOURCES:
+                for c in object_sets[a]:
+                    prob += pl.lpSum(
+                        actions[t][a][o][r] for o in type_range_map[c]
+                    ) * object_sets[a].count(first_class) == pl.lpSum(
+                        actions[t][a][o][r] for o in type_range_map[first_class]
+                    ) * object_sets[a].count(c)
+
+    print("general activity object constraints done")
+
+    ### durations are considered -> if an activity is started at t with o, it blocks the next time slots during it's duration
     for time in TIMESLOTS:
         for act in ACTIVITIES:
-            for i in INSTANCES:
+            for o in OBJECTS:
                 # duration can not exeed time limit if a started at t
-                prob += (time + duration[act]) * actions[time][act][i][0] <= endtime + 1
-                # if a started and duration > 1, the next time slots for i are also blocked
+                prob += (time + duration[act]) * actions[time][act][o][0] <= endtime + 1
+                # if a started and duration > 1, the next time slots for o are also blocked
                 for j in range(1, min((duration[act], last_time - time))):
                     for a in ACTIVITIES:
                         prob += (
-                            actions[time + j][a][i][0] <= 1 - actions[time][act][i][0]
+                            actions[time + j][a][o][0] <= 1 - actions[time][act][o][0]
                         )
                 for r in RESOURCES:
                     prob += pl.lpSum(
                         actions[time + j][a][ins][r]
                         for j in range(1, min((duration[act], last_time - time)))
                         for a in ACTIVITIES
-                        for ins in INSTANCES
-                    ) <= (1 - actions[time][act][i][0]) * len(ACTIVITIES) * len(
-                        INSTANCES
+                        for ins in OBJECTS
+                    ) <= (1 - actions[time][act][o][0]) * len(ACTIVITIES) * len(
+                        OBJECTS
                     ) * min((duration[act], last_time - time))
                     # if r used this time, r is blocked for the next duration-1 time slots
                     # for j in range(1, min((duration[act], last_time - time))):
                     #     for a in ACTIVITIES:
-                    #         for ins in INSTANCES:
+                    #         for ins in OBJECTS:
                     #             prob += (
                     #                 actions[time + j][a][ins][r]
-                    #                 <= 1 - actions[time][act][i][r]
+                    #                 <= 1 - actions[time][act][o][r]
                     #            )
     print("duration constraints done")
 
@@ -266,90 +276,90 @@ def do():
             # each resource is available when it is used
             if t not in availability[r]:
                 prob += (
-                    pl.lpSum(actions[t][a][i][r] for a in ACTIVITIES for i in INSTANCES)
+                    pl.lpSum(actions[t][a][o][r] for a in ACTIVITIES for o in OBJECTS)
                     == 0
                 )
                 pass
             for a in ACTIVITIES:
-                # if there is at least one instance affected by resource r, the activity is done with r --> no other activity can use r at the same time
+                # if there is at least one object affected by resource r, the activity is done with r --> no other activity can use r at the same time
                 # TODO / DONE? make this RAM freindly
                 # taken from https://stackoverflow.com/a/26875847
                 other_as = ACTIVITIES[:]  # fastest way to copy
                 other_as.remove(a)
-                # NOTE: (1 - pl.lpSum(actions[t][a][i][r] for i in INSTANCES)) can be negative if a is started with several instances. Can only be as many as input set allows -> divided by input set it is 1 or 0
+                # NOTE: (1 - pl.lpSum(actions[t][a][o][r] for o in OBJECTS)) can be negative if a is started with several objects. Can only be as many as input set allows -> divided by input set it is 1 or 0
                 prob += pl.lpSum(
-                    actions[t][other_a][i][r] for other_a in other_as for i in INSTANCES
+                    actions[t][other_a][o][r] for other_a in other_as for o in OBJECTS
                 ) <= (
                     1
-                    - pl.lpSum(actions[t][a][i][r] for i in INSTANCES)
-                    / len(instance_sets[a])
-                ) * len(other_as) * len(INSTANCES)
+                    - pl.lpSum(actions[t][a][o][r] for o in OBJECTS)
+                    / len(object_sets[a])
+                ) * len(other_as) * len(OBJECTS)
 
-                # for ins in INSTANCES:
+                # for ins in OBJECTS:
                 #     prob += pl.lpSum(
-                #         actions[t][other_a][i][r]
+                #         actions[t][other_a][o][r]
                 #         for other_a in other_as
-                #         for i in INSTANCES
-                #     ) <= (1 - actions[t][a][ins][r]) * len(other_as) * len(INSTANCES)
-                # for ins in INSTANCES:
+                #         for o in OBJECTS
+                #     ) <= (1 - actions[t][a][ins][r]) * len(other_as) * len(OBJECTS)
+                # for ins in OBJECTS:
                 #     for other_a in ACTIVITIES:
                 #         if a != other_a:
-                #             for i in INSTANCES:
+                #             for o in OBJECTS:
                 #                 prob += (
-                #                     actions[t][other_a][i][r]
+                #                     actions[t][other_a][o][r]
                 #                     <= 1 - actions[t][a][ins][r]
                 #                 )
 
-                # the same activity does not use a resource at the same time in different action-instances
-                # one resource is not used with more instances than the activity's input set allows
-                prob += pl.lpSum(actions[t][a][i][r] for i in INSTANCES) <= len(
-                    instance_sets[a]
+                # the same activity does not use a resource at the same time in different action-objects
+                # one resource is not used with more objects than the activity's input set allows
+                prob += pl.lpSum(actions[t][a][o][r] for o in OBJECTS) <= len(
+                    object_sets[a]
                 )
-                # the instances that the resource is used on must be in line with input set requirements
-                if len(instance_sets[a]) > 0:
-                    first_type = instance_sets[a][0]
-                    for input_type_index in range(1, len(instance_sets[a])):
-                        input_type = instance_sets[a][input_type_index]
-                        # instances in right relation
+                # the objects that the resource is used on must be in line with input set requirements
+                if len(object_sets[a]) > 0:
+                    first_class = object_sets[a][0]
+                    for input_type_index in range(1, len(object_sets[a])):
+                        input_type = object_sets[a][input_type_index]
+                        # objects in right relation
                         prob += pl.lpSum(
-                            actions[t][a][i][r] for i in type_range_map[input_type]
-                        ) * instance_sets[a].count(first_type) == pl.lpSum(
-                            actions[t][a][i][r] for i in type_range_map[first_type]
-                        ) * instance_sets[a].count(input_type)
-                        # amount of instances of instances not bigger than input set allows (so not more than one action per activity with resource r)
+                            actions[t][a][o][r] for o in type_range_map[input_type]
+                        ) * object_sets[a].count(first_class) == pl.lpSum(
+                            actions[t][a][o][r] for o in type_range_map[first_class]
+                        ) * object_sets[a].count(input_type)
+                        # amount of objects of objects not bigger than input set allows (so not more than one action per activity with resource r)
                         prob += pl.lpSum(
-                            actions[t][a][i][r] for i in type_range_map[input_type]
-                        ) <= instance_sets[a].count(input_type)
-                    for i in INSTANCES:
-                        if get_type(i) not in instance_sets[a]:
-                            prob += actions[t][a][i][r] == 0
+                            actions[t][a][o][r] for o in type_range_map[input_type]
+                        ) <= object_sets[a].count(input_type)
+                    for o in OBJECTS:
+                        if get_type(o) not in object_sets[a]:
+                            prob += actions[t][a][o][r] == 0
 
         # each activity is executed with its required resources
         for a in ACTIVITIES[start_activity + 1 : end_activity]:
-            for i in INSTANCES:
+            for o in OBJECTS:
                 # consumption is satisfied
-                # actions[t][a][i][0] symbolizes whether the activity is started at time t in room i
+                # actions[t][a][o][0] symbolizes whether the activity is started at time t in room o
                 prob += (
-                    pl.lpSum(actions[t][a][i][r] for r in RESOURCES[1:])
-                    == resource_consumption[a] * actions[t][a][i][0]
+                    pl.lpSum(actions[t][a][o][r] for r in RESOURCES[1:])
+                    == resource_consumption[a] * actions[t][a][o][0]
                 )
                 # satisfied only with required role
                 prob += pl.lpSum(
-                    actions[t][a][i][r]
+                    actions[t][a][o][r]
                     for r in roles_resources_map[role_requirement[a]]
-                ) == pl.lpSum(actions[t][a][i][r] for r in RESOURCES[1:])
+                ) == pl.lpSum(actions[t][a][o][r] for r in RESOURCES[1:])
 
     print("resource constraints done")
 
     ### OLC constraints ###
-    for i in claims_range:
-        # all states of claim can only be reached once (same activity only executed once on same instance)
+    for o in claims_range:
+        # all states of claim can only be reached once (same activity only executed once on same object)
         for a in RACTIVITIES:
-            prob += pl.lpSum(actions[t][a][i][0] for t in TIMESLOTS) <= 1
+            prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1
         # only question_claim_b or question_claim_a
         prob += (
             pl.lpSum(
-                actions[t][question_claim_b][i][0] + actions[t][question_claim_a][i][0]
+                actions[t][question_claim_b][o][0] + actions[t][question_claim_a][o][0]
                 for t in TIMESLOTS
             )
             <= 1
@@ -357,54 +367,80 @@ def do():
         # only decide_claim_b or decide_claim_a
         prob += (
             pl.lpSum(
-                actions[t][decide_claim_a][i][0] + actions[t][decide_claim_b][i][0]
+                actions[t][decide_claim_a][o][0] + actions[t][decide_claim_b][o][0]
                 for t in TIMESLOTS
             )
             <= 1
         )
-    # all states of assessment can only be reached once (same activity only executed once on same instance)
-    for i in assessments_range:
+    # all states of assessment can only be reached once (same activity only executed once on same object)
+    for o in assessments_range:
         for a in RACTIVITIES:
-            prob += pl.lpSum(actions[t][a][i][0] for t in TIMESLOTS) <= 1
+            prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1
 
     ### activity / data dependencies ###
-    for i in INSTANCES:
+    # state requirements
+    for o in OBJECTS:
         for time in TIMESLOTS:
             times_before = range(0, time)
 
             # record before question
-            if i in claims_range:
+            if o in claims_range:
                 prob += pl.lpSum(
-                    actions[t][record_claim][i][0] for t in times_before
+                    actions[t][record_claim][o][0] for t in times_before
                 ) >= pl.lpSum(
-                    actions[t][question_claim_a][i][0]
-                    + actions[t][question_claim_b][i][0]
+                    actions[t][question_claim_a][o][0]
+                    + actions[t][question_claim_b][o][0]
                     for t in times_before
                 )
 
             # question_a before assess
-            if i in assessments_range:
+            if o in assessments_range:
                 prob += pl.lpSum(
-                    actions[t][question_claim_a][i][0] for t in times_before
-                ) >= pl.lpSum(actions[t][assess_claim][i][0] for t in times_before)
+                    actions[t][question_claim_a][o][0] for t in times_before
+                ) >= pl.lpSum(actions[t][assess_claim][o][0] for t in times_before)
 
             # question_b before decide_b
-            if i in claims_range:
+            if o in claims_range:
                 prob += pl.lpSum(
-                    actions[t][question_claim_b][i][0] for t in times_before
-                ) >= pl.lpSum(actions[t][decide_claim_b][i][0] for t in times_before)
+                    actions[t][question_claim_b][o][0] for t in times_before
+                ) >= pl.lpSum(actions[t][decide_claim_b][o][0] for t in times_before)
 
             # assess and question_a before decide_a
-            if i in claims_range:
-                # questoion_a before decide_a on claim
+            if o in claims_range:
+                # question_a before decide_a on claim
                 prob += pl.lpSum(
-                    actions[t][question_claim_a][i][0] for t in times_before
-                ) >= pl.lpSum(actions[t][decide_claim_a][i][0] for t in times_before)
-            if i in assessments_range:
+                    actions[t][question_claim_a][o][0] for t in times_before
+                ) >= pl.lpSum(actions[t][decide_claim_a][o][0] for t in times_before)
+            if o in assessments_range:
                 # assess before decide_a on assessment
                 prob += pl.lpSum(
-                    actions[t][assess_claim][i][0] for t in times_before
-                ) >= pl.lpSum(actions[t][decide_claim_a][i][0] for t in times_before)
+                    actions[t][assess_claim][o][0] for t in times_before
+                ) >= pl.lpSum(actions[t][decide_claim_a][o][0] for t in times_before)
+
+    # decide_a on claim and assessment only if question_a on them before (data link)
+    # order is already ensured
+    # TODO: do it or write why not possible
+    for c in type_range_map[0]:
+        for a in type_range_map[1]:
+            prob += pl.lpSum(
+                (
+                    actions[t][question_claim_a][c][r]
+                    == actions[t][question_claim_a][a][r]
+                    and actions[t][question_claim_a][a][r]
+                    == 1
+                )
+                for t in TIMESLOTS
+                for r in RESOURCES[1:]
+            ) >= pl.lpSum(
+                (
+                    actions[t][decide_claim_a][a][r]
+                    == actions[t][decide_claim_a][c][r]
+                    and actions[t][question_claim_a][a][r]
+                    == 1
+                )
+                for t in TIMESLOTS
+                for r in RESOURCES[1:]
+            )
 
     ########################
     ### define the goals ###
@@ -414,24 +450,24 @@ def do():
     # claims to decide
     prob += (
         pl.lpSum(
-            actions[t][decide_claim_a][i][0] + actions[t][decide_claim_b][i][0]
+            actions[t][decide_claim_a][o][0] + actions[t][decide_claim_b][o][0]
             for t in TIMESLOTS
-            for i in claims_range
+            for o in claims_range
         )
         >= 3
     )
     # assessments to make
     prob += (
         pl.lpSum(
-            actions[t][assess_claim][i][0] for t in TIMESLOTS for i in assessments_range
+            actions[t][assess_claim][o][0] for t in TIMESLOTS for o in assessments_range
         )
         >= assessments_to_make
     )
     prob += (
         pl.lpSum(
-            actions[t][decide_claim_a][i][0]
+            actions[t][decide_claim_a][o][0]
             for t in TIMESLOTS
-            for i in assessments_range
+            for o in assessments_range
         )
         >= assessments_to_make
     )
@@ -443,13 +479,16 @@ def do():
     for t in TIMESLOTS:
         print("\nTime slot ", t)
         for a in ACTIVITIES:
-            for i in INSTANCES:
+            for o in OBJECTS:
                 for r in RESOURCES:
-                    if actions[t][a][i][r].varValue == 1:
+                    if actions[t][a][o][r].varValue == 1:
                         print(
                             activity_names[a],
-                            " on instance ",
-                            i,  "(", type_names[get_type(i)],")",
+                            " on object ",
+                            o,
+                            "(",
+                            type_names[get_type(o)],
+                            ")",
                             " with ",
                             resource_names[r],
                         )
