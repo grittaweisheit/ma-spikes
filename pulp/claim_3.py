@@ -58,12 +58,12 @@ def do():
     ]
 
     duration = [1, 1, 1, 1, 1, 2, 2, 1]
-    role_requirement = [0, 1, 2, 1, 1, 1, 1, 0]
-    resource_consumption = [0, 1, 1, 1, 1, 2, 2, 0]
+    role_req = [0, 1, 2, 1, 1, 1, 1, 0]
+    res_cons = [0, 1, 1, 1, 1, 2, 2, 0]
 
     data_types = [0, 1]  # claim, assessment
     type_names = ["claim", "assessment"]
-    object_sets = [[0], [0], [1], [0], [0, 1], [0], [0, 1], [0]]
+    class_reqs = [[0], [0], [1], [0], [0, 1], [0], [0, 1], [0]]
 
     ### resources ###
 
@@ -71,10 +71,10 @@ def do():
     role_names = ["-", "worker", "expert"]
     availability = [
         range(first_time, last_time + 1),  # no resource / started, always available
+        range(0, 5 + 1),
         range(first_time, last_time + 1),
         range(first_time, last_time + 1),
-        range(first_time, last_time + 1),
-        range(first_time, last_time + 1),
+        range(3, last_time + 1),
     ]
     resource_ids = [0, 1, 2, 3, 4]  # no resource / started, Wanda, Willy, Emil, Erika
     roles = [0, 1, 2]  # nothing, worker, expert
@@ -96,7 +96,7 @@ def do():
     #####################################
 
     # claims, assessments
-    OBJECTS = range(object_count)
+    OBJECTS = array.array("b", range(object_count))
     claims_range = range(claims)
     assessments_range = range(claims, claims + assessments)
     type_range_map = [claims_range, assessments_range]
@@ -222,19 +222,19 @@ def do():
 
             # no objects of other types are affected
             for o in OBJECTS:
-                if get_type(o) not in object_sets[a]:
+                if get_type(o) not in class_reqs[a]:
                     prob += actions[t][a][o][0] == 0
 
             # amount of objects of each type matches with occurrences in input set (or all zero) / relations are the same (r = 0)
             # and same resources used on objects forming a valid input set (r > 0)
-            first_class = object_sets[a][0]
+            first_class = class_reqs[a][0]
             for r in RESOURCES:
-                for c in object_sets[a]:
+                for c in class_reqs[a]:
                     prob += pl.lpSum(
                         actions[t][a][o][r] for o in type_range_map[c]
-                    ) * object_sets[a].count(first_class) == pl.lpSum(
+                    ) * class_reqs[a].count(first_class) == pl.lpSum(
                         actions[t][a][o][r] for o in type_range_map[first_class]
-                    ) * object_sets[a].count(c)
+                    ) * class_reqs[a].count(c)
 
     print("general activity object constraints done")
 
@@ -292,7 +292,7 @@ def do():
                 ) <= (
                     1
                     - pl.lpSum(actions[t][a][o][r] for o in OBJECTS)
-                    / len(object_sets[a])
+                    / len(class_reqs[a])
                 ) * len(other_as) * len(OBJECTS)
 
                 # for ins in OBJECTS:
@@ -313,25 +313,25 @@ def do():
                 # the same activity does not use a resource at the same time in different action-objects
                 # one resource is not used with more objects than the activity's input set allows
                 prob += pl.lpSum(actions[t][a][o][r] for o in OBJECTS) <= len(
-                    object_sets[a]
+                    class_reqs[a]
                 )
                 # the objects that the resource is used on must be in line with input set requirements
-                if len(object_sets[a]) > 0:
-                    first_class = object_sets[a][0]
-                    for input_type_index in range(1, len(object_sets[a])):
-                        input_type = object_sets[a][input_type_index]
+                if len(class_reqs[a]) > 0:
+                    first_class = class_reqs[a][0]
+                    for input_type_index in range(1, len(class_reqs[a])):
+                        input_type = class_reqs[a][input_type_index]
                         # objects in right relation
                         prob += pl.lpSum(
                             actions[t][a][o][r] for o in type_range_map[input_type]
-                        ) * object_sets[a].count(first_class) == pl.lpSum(
+                        ) * class_reqs[a].count(first_class) == pl.lpSum(
                             actions[t][a][o][r] for o in type_range_map[first_class]
-                        ) * object_sets[a].count(input_type)
+                        ) * class_reqs[a].count(input_type)
                         # amount of objects of objects not bigger than input set allows (so not more than one action per activity with resource r)
                         prob += pl.lpSum(
                             actions[t][a][o][r] for o in type_range_map[input_type]
-                        ) <= object_sets[a].count(input_type)
+                        ) <= class_reqs[a].count(input_type)
                     for o in OBJECTS:
-                        if get_type(o) not in object_sets[a]:
+                        if get_type(o) not in class_reqs[a]:
                             prob += actions[t][a][o][r] == 0
 
         # each activity is executed with its required resources
@@ -341,12 +341,11 @@ def do():
                 # actions[t][a][o][0] symbolizes whether the activity is started at time t in room o
                 prob += (
                     pl.lpSum(actions[t][a][o][r] for r in RESOURCES[1:])
-                    == resource_consumption[a] * actions[t][a][o][0]
+                    == res_cons[a] * actions[t][a][o][0]
                 )
                 # satisfied only with required role
                 prob += pl.lpSum(
-                    actions[t][a][o][r]
-                    for r in roles_resources_map[role_requirement[a]]
+                    actions[t][a][o][r] for r in roles_resources_map[role_req[a]]
                 ) == pl.lpSum(actions[t][a][o][r] for r in RESOURCES[1:])
 
     print("resource constraints done")
@@ -426,17 +425,14 @@ def do():
                 (
                     actions[t][question_claim_a][c][r]
                     == actions[t][question_claim_a][a][r]
-                    and actions[t][question_claim_a][a][r]
-                    == 1
+                    and actions[t][question_claim_a][a][r] == 1
                 )
                 for t in TIMESLOTS
                 for r in RESOURCES[1:]
             ) >= pl.lpSum(
                 (
-                    actions[t][decide_claim_a][a][r]
-                    == actions[t][decide_claim_a][c][r]
-                    and actions[t][question_claim_a][a][r]
-                    == 1
+                    actions[t][decide_claim_a][a][r] == actions[t][decide_claim_a][c][r]
+                    and actions[t][question_claim_a][a][r] == 1
                 )
                 for t in TIMESLOTS
                 for r in RESOURCES[1:]
