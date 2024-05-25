@@ -37,17 +37,15 @@ def do():
     ### activities ###
 
     # start and finish are fixed
-    start_activity = 0
-    end_activity = 7
+    end_activity = 6
     # start, record, assess, question, decide, finish (end)
-    record_claim = 1
-    assess_claim = 2
-    question_claim_b = 3
-    question_claim_a = 4
-    decide_claim_b = 5
-    decide_claim_a = 6
+    record_claim = 0
+    assess_claim = 1
+    question_claim_b = 2
+    question_claim_a = 3
+    decide_claim_b = 4
+    decide_claim_a = 5
     activity_names = [
-        "start",
         "record claim",
         "assess claim",
         "question claim (basic)",
@@ -57,13 +55,13 @@ def do():
         "finish",
     ]
 
-    duration = [1, 1, 1, 1, 1, 2, 2, 1]
-    role_req = [0, 1, 2, 1, 1, 1, 1, 0]
-    res_cons = [0, 1, 1, 1, 1, 2, 2, 0]
+    duration = [1, 1, 1, 1, 2, 2, 1]
+    role_req = [1, 2, 1, 1, 1, 1, 0]
+    res_cons = [1, 1, 1, 1, 2, 2, 0]
 
     data_types = [0, 1]  # claim, assessment
     type_names = ["claim", "assessment"]
-    class_reqs = [[0], [0], [1], [0], [0, 1], [0], [0, 1], [0]]
+    class_reqs = [[0], [1], [0], [0, 1], [0], [0, 1], [0]]
 
     ### resources ###
 
@@ -106,9 +104,9 @@ def do():
             if object_index in type_range_map[type_index]:
                 return type_index
 
-    ACTIVITIES = array.array("b", range(start_activity, end_activity + 1))
-    RACTIVITIES = array.array(
-        "b", range(start_activity + 1, end_activity)
+    ACTIVITIES_BUFFER = array.array("b", range(end_activity + 1))
+    ACTIVITIES = array.array(
+        "b", range(end_activity)
     )  # real activities (not start and end)
     TIMESLOTS = array.array("b", range(first_time, last_time + 1))
     RESOURCES = array.array("b", resource_ids)
@@ -116,12 +114,9 @@ def do():
     # we have a decision variable whether the activity is done in the room at the time slot with this resource for all possibilities
     # actions[t][a][o][0] symbolizes whether the activity is started at time t with object o
     actions = pl.LpVariable.dicts(
-        "Action", (TIMESLOTS, ACTIVITIES, OBJECTS, RESOURCES), cat=pl.LpBinary
+        "Action", (TIMESLOTS, ACTIVITIES_BUFFER, OBJECTS, RESOURCES), cat=pl.LpBinary
     )
     endtime = pl.LpVariable("Endtime", lowBound=0, upBound=last_time, cat=pl.LpInteger)
-    starttime = pl.LpVariable(
-        "Starttime", lowBound=0, upBound=last_time, cat=pl.LpInteger
-    )
 
     ############################
     ### define the objective ###
@@ -135,27 +130,11 @@ def do():
     ##############################
 
     ### start and end constraints ###
-    # start and finish do not need resources
-    for t in TIMESLOTS:
-        prob += pl.lpSum(actions[t][start_activity][0][r] for r in RESOURCES) <= 1
-        prob += (
-            pl.lpSum(actions[t][start_activity][0][r] for r in RESOURCES)
-            <= actions[t][start_activity][0][0]
-        )
-
-    # start and finish only happen once each
-    prob += pl.lpSum(actions[t][start_activity][0][0] for t in TIMESLOTS) == 1
+    # finish only happens once
     prob += pl.lpSum(actions[t][end_activity][0][0] for t in TIMESLOTS) == 1
 
     for t in TIMESLOTS:
-        # start and finish happen on all objects at the same time
-        prob += (
-            pl.lpSum(actions[t][start_activity][o][0] for o in OBJECTS)
-            == object_count * actions[t][start_activity][0][0]
-        )
-        prob += pl.lpSum(actions[t][start_activity][o][0] for o in OBJECTS) == pl.lpSum(
-            actions[t][start_activity][o][0] for o in OBJECTS
-        )
+        # finish happens on all objects at the same time
         prob += (
             pl.lpSum(actions[t][end_activity][o][0] for o in OBJECTS)
             == object_count * actions[t][end_activity][0][0]
@@ -164,19 +143,13 @@ def do():
             actions[t][end_activity][o][0] for o in OBJECTS
         )
 
-    # after finish and before start nothing happens
-    # before start and after end, no activity is done
+    # after finish nothing happens
+    # after end, no activity is done
     for t in TIMESLOTS:
-        for a in ACTIVITIES:
+        for a in ACTIVITIES_BUFFER:
             for o in OBJECTS:
                 # endtime is the last time a task is done
                 prob += actions[t][a][o][0] * t <= endtime
-                # starttime is the first time a task is done
-                # if task a is not done at t, the value is set to last_tim with 1-0*last_time and thus satisfies the constraint because last_time >= starttime
-                prob += (
-                    actions[t][a][o][0] * t + (1 - actions[t][a][o][0]) * last_time
-                    >= starttime
-                )
 
     # end task is done at endtime and only then
     prob += (
@@ -187,29 +160,18 @@ def do():
         pl.lpSum(actions[t][end_activity][o][0] * t for t in TIMESLOTS for o in OBJECTS)
         == endtime * object_count
     )
-    # start task is done at starttime and only then
-    prob += (
-        pl.lpSum(actions[t][start_activity][o][0] for t in TIMESLOTS for o in OBJECTS)
-        == object_count
-    )
-    prob += (
-        pl.lpSum(
-            actions[t][start_activity][o][0] * t for t in TIMESLOTS for o in OBJECTS
-        )
-        == starttime * object_count
-    )
 
-    print("start and end constraints done")
+    print("end constraints done")
 
     ### general activity object constraints ###
 
     for t in TIMESLOTS:
         # on every object there can be max 1 activity at a time
         for o in OBJECTS:
-            prob += pl.lpSum(actions[t][a][o][0] for a in ACTIVITIES) <= 1
+            prob += pl.lpSum(actions[t][a][o][0] for a in ACTIVITIES_BUFFER) <= 1
 
         # all real activities affect objects in line with their input set requirements
-        for a in RACTIVITIES:
+        for a in ACTIVITIES:
             # amount of objects of each type matches with occurrences in input set (or all zero) / relations are the same
             # first_type = object_sets[a][0]
             # for input_type_index in range(1, len(object_sets[a])):
@@ -240,13 +202,13 @@ def do():
 
     ### durations are considered -> if an activity is started at t with o, it blocks the next time slots during it's duration
     for time in TIMESLOTS:
-        for act in ACTIVITIES:
+        for act in ACTIVITIES_BUFFER:
             for o in OBJECTS:
                 # duration can not exeed time limit if a started at t
                 prob += (time + duration[act]) * actions[time][act][o][0] <= endtime + 1
                 # if a started and duration > 1, the next time slots for o are also blocked
                 for j in range(1, min((duration[act], last_time - time))):
-                    for a in ACTIVITIES:
+                    for a in ACTIVITIES_BUFFER:
                         prob += (
                             actions[time + j][a][o][0] <= 1 - actions[time][act][o][0]
                         )
@@ -254,9 +216,9 @@ def do():
                     prob += pl.lpSum(
                         actions[time + j][a][ins][r]
                         for j in range(1, min((duration[act], last_time - time)))
-                        for a in ACTIVITIES
+                        for a in ACTIVITIES_BUFFER
                         for ins in OBJECTS
-                    ) <= (1 - actions[time][act][o][0]) * len(ACTIVITIES) * len(
+                    ) <= (1 - actions[time][act][o][0]) * len(ACTIVITIES_BUFFER) * len(
                         OBJECTS
                     ) * min((duration[act], last_time - time))
                     # if r used this time, r is blocked for the next duration-1 time slots
@@ -276,15 +238,15 @@ def do():
             # each resource is available when it is used
             if t not in availability[r]:
                 prob += (
-                    pl.lpSum(actions[t][a][o][r] for a in ACTIVITIES for o in OBJECTS)
+                    pl.lpSum(actions[t][a][o][r] for a in ACTIVITIES_BUFFER for o in OBJECTS)
                     == 0
                 )
                 pass
-            for a in ACTIVITIES:
+            for a in ACTIVITIES_BUFFER:
                 # if there is at least one object affected by resource r, the activity is done with r --> no other activity can use r at the same time
                 # TODO / DONE? make this RAM freindly
                 # taken from https://stackoverflow.com/a/26875847
-                other_as = ACTIVITIES[:]  # fastest way to copy
+                other_as = ACTIVITIES_BUFFER[:]  # fastest way to copy
                 other_as.remove(a)
                 # NOTE: (1 - pl.lpSum(actions[t][a][o][r] for o in OBJECTS)) can be negative if a is started with several objects. Can only be as many as input set allows -> divided by input set it is 1 or 0
                 prob += pl.lpSum(
@@ -335,7 +297,7 @@ def do():
                             prob += actions[t][a][o][r] == 0
 
         # each activity is executed with its required resources
-        for a in ACTIVITIES[start_activity + 1 : end_activity]:
+        for a in ACTIVITIES:
             for o in OBJECTS:
                 # consumption is satisfied
                 # actions[t][a][o][0] symbolizes whether the activity is started at time t in room o
@@ -353,7 +315,7 @@ def do():
     ### OLC constraints ###
     for o in claims_range:
         # all states of claim can only be reached once (same activity only executed once on same object)
-        for a in RACTIVITIES:
+        for a in ACTIVITIES:
             prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1
         # only question_claim_b or question_claim_a
         prob += (
@@ -373,7 +335,7 @@ def do():
         )
     # all states of assessment can only be reached once (same activity only executed once on same object)
     for o in assessments_range:
-        for a in RACTIVITIES:
+        for a in ACTIVITIES:
             prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1
 
     ### activity / data dependencies ###
@@ -474,7 +436,7 @@ def do():
     # print the solution
     for t in TIMESLOTS:
         print("\nTime slot ", t)
-        for a in ACTIVITIES:
+        for a in ACTIVITIES_BUFFER:
             for o in OBJECTS:
                 for r in RESOURCES:
                     if actions[t][a][o][r].varValue == 1:
