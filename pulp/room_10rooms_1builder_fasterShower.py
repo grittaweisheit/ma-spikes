@@ -1,5 +1,5 @@
 import array
-from memory_profiler import profile
+# from memory_profiler import profile
 import pulp as pl
 
 # TODO: think aubout data links.
@@ -11,23 +11,22 @@ import pulp as pl
 # @profile
 def do():
     # initialize the Problem
-    prob = pl.LpProblem("fCM_claim_Schedule", pl.LpMinimize)
+    prob = pl.LpProblem("fCM_room_Schedule", pl.LpMinimize)
     """ 
-    XXXXXXXXXXX
+    no buying
     """
 
     ########################################
     ### define variables for the process ###
     ########################################
 
-    claims = 3
-    assessments = 1
-    object_count = claims + assessments
+    rooms = 10
+    object_count = rooms
 
-    claims_to_decide = 3
-    assessments_to_make = 1
-
-    last_time = 15
+    kitchens_to_build = 2
+    bathrooms_to_build = 3
+    empty_rooms_to_build = 5
+    deadline = 15
     first_time = 0
 
     #######################################
@@ -37,56 +36,64 @@ def do():
     ### activities ###
 
     # start and finish are fixed
-    end_activity = 6
+    finish = 6
     # start, record, assess, question, decide, finish (end)
-    record_claim = 0
-    assess_claim = 1
-    question_claim_b = 2
-    question_claim_a = 3
-    decide_claim_b = 4
-    decide_claim_a = 5
+    build_room = 0
+    install_shower_t = 1
+    install_shower_b = 2
+    install_toilet_s = 3
+    install_toilet_b = 4
+    install_kitchen = 5
     activity_names = [
-        "record claim",
-        "assess claim",
-        "question claim (basic)",
-        "question claim (request assessment)",
-        "decide claim (basic)",
-        "decide claim (with assessment)",
+        "build_room",
+        "install_shower_t",
+        "install_shower_b",
+        "install_toilet_s",
+        "install_toilet_b",
+        "install_kitchen",
         "finish",
     ]
 
-    duration = [1, 1, 1, 1, 2, 2, 1]
-    role_req = [1, 2, 1, 1, 1, 1, 0]
-    res_cons = [1, 1, 1, 1, 2, 2, 0]
+    duration = [1, 1,1, 1, 1, 2, 1]
+    role_req = [1, 2, 2, 3, 3, 4, 0]
+    res_cons = [1, 1, 1, 1, 1, 2, 0]
 
-    data_types = [0, 1]  # claim, assessment
-    type_names = ["claim", "assessment"]
-    class_reqs = [[0], [1], [0], [0, 1], [0], [0, 1], [0]]
+    data_types = [0]  # room
+    type_names = ["room"]
+    class_reqs = [[0], [0], [0], [0], [0], [0], [0]]
 
     ### resources ###
 
-    resource_names = ["-", "Wanda", "Willy", "Emil", "Erika"]
-    role_names = ["-", "worker", "expert"]
+    resource_names = ["-", "Bob", "Sandy", "Kay", "Tina"]
+    role_names = ["-", "builder", "shower-crew", "toilet-crew", "kitchen-crew"]
     availability = [
-        range(first_time, last_time + 1),  # no resource / started, always available
-        range(0, 5 + 1),
-        range(first_time, last_time + 1),
-        range(first_time, last_time + 1),
-        range(3, last_time + 1),
+        range(first_time, deadline + 1),
+        range(first_time, deadline + 1),
+        range(first_time, deadline + 1),
+        range(first_time, deadline + 1),
+        range(first_time, deadline + 1),
     ]
-    resource_ids = [0, 1, 2, 3, 4]  # no resource / started, Wanda, Willy, Emil, Erika
-    roles = [0, 1, 2]  # nothing, worker, expert
+    resource_ids = [
+        0,
+        1,
+        2,
+        3,
+        4
+    ]  # no resource / started, Bob, Bill, Sandy, Kay, Tina
+    roles = [0, 1, 2, 3, 4]  # nothing, builder, shower-crew, toilet-crew, kitchen-crew
     resource_roles_map = [
         [0],  # no role, no resource / started
-        [1],  # Wanda -> worker
-        [1],  # Willy -> worker
-        [1, 2],  # Emil -> expert, worker
-        [2],  # Erika -> expert
+        [1],  # Bob -> builder
+        [2, 4],  # Sandy -> shower-crew, kitchen-crew
+        [4],  # Kay -> kitchen-crew
+        [3],  # Tina -> toilet-crew
     ]
     roles_resources_map = [
         [0],  # no role, no resource / started
-        [1, 2, 3],  # Worker: Wanda, Willy, Emil
-        [3, 4],  # Expert: Emil, Erika
+        [1],  # Builder: Bob, Bill
+        [2],  # Shower-Crew: Sandy
+        [4],  # Toilet-Crew: Tina
+        [2,3],  # Kitchen-Crew: Sandy, Kay
     ]
 
     #####################################
@@ -95,20 +102,17 @@ def do():
 
     # claims, assessments
     OBJECTS = array.array("b", range(object_count))
-    claims_range = range(claims)
-    assessments_range = range(claims, claims + assessments)
-    type_range_map = [claims_range, assessments_range]
+    rooms_range = range(rooms)
+    type_range_map = [rooms_range]
 
     def get_type(object_index):
         for type_index in range(len(type_range_map)):
             if object_index in type_range_map[type_index]:
                 return type_index
 
-    ACTIVITIES_BUFFER = array.array("b", range(end_activity + 1))
-    ACTIVITIES = array.array(
-        "b", range(end_activity)
-    )  # real activities (not start and end)
-    TIMESLOTS = array.array("b", range(first_time, last_time + 1))
+    ACTIVITIES_BUFFER = array.array("b", range(finish + 1))
+    ACTIVITIES = array.array("b", range(finish))  # real activities (not start and end)
+    TIMESLOTS = array.array("b", range(first_time, deadline + 1))
     RESOURCES = array.array("b", resource_ids)
 
     # we have a decision variable whether the activity is done in the room at the time slot with this resource for all possibilities
@@ -116,7 +120,7 @@ def do():
     actions = pl.LpVariable.dicts(
         "Action", (TIMESLOTS, ACTIVITIES_BUFFER, OBJECTS, RESOURCES), cat=pl.LpBinary
     )
-    endtime = pl.LpVariable("Endtime", lowBound=0, upBound=last_time, cat=pl.LpInteger)
+    endtime = pl.LpVariable("Endtime", lowBound=0, upBound=deadline, cat=pl.LpInteger)
 
     ############################
     ### define the objective ###
@@ -131,16 +135,16 @@ def do():
 
     ### start and end constraints ###
     # finish only happens once
-    prob += pl.lpSum(actions[t][end_activity][0][0] for t in TIMESLOTS) == 1
+    prob += pl.lpSum(actions[t][finish][0][0] for t in TIMESLOTS) == 1
 
     for t in TIMESLOTS:
         # finish happens on all objects at the same time
         prob += (
-            pl.lpSum(actions[t][end_activity][o][0] for o in OBJECTS)
-            == object_count * actions[t][end_activity][0][0]
+            pl.lpSum(actions[t][finish][o][0] for o in OBJECTS)
+            == object_count * actions[t][finish][0][0]
         )
-        prob += pl.lpSum(actions[t][end_activity][o][0] for o in OBJECTS) == pl.lpSum(
-            actions[t][end_activity][o][0] for o in OBJECTS
+        prob += pl.lpSum(actions[t][finish][o][0] for o in OBJECTS) == pl.lpSum(
+            actions[t][finish][o][0] for o in OBJECTS
         )
 
     # after finish nothing happens
@@ -153,11 +157,11 @@ def do():
 
     # end task is done at endtime and only then
     prob += (
-        pl.lpSum(actions[t][end_activity][o][0] for t in TIMESLOTS for o in OBJECTS)
+        pl.lpSum(actions[t][finish][o][0] for t in TIMESLOTS for o in OBJECTS)
         == object_count
     )
     prob += (
-        pl.lpSum(actions[t][end_activity][o][0] * t for t in TIMESLOTS for o in OBJECTS)
+        pl.lpSum(actions[t][finish][o][0] * t for t in TIMESLOTS for o in OBJECTS)
         == endtime * object_count
     )
 
@@ -207,7 +211,7 @@ def do():
                 # duration can not exeed time limit if a started at t
                 prob += (time + duration[act]) * actions[time][act][o][0] <= endtime + 1
                 # if a started and duration > 1, the next time slots for o are also blocked
-                for j in range(1, min((duration[act], last_time - time))):
+                for j in range(1, min((duration[act], deadline - time))):
                     for a in ACTIVITIES_BUFFER:
                         prob += (
                             actions[time + j][a][o][0] <= 1 - actions[time][act][o][0]
@@ -215,12 +219,12 @@ def do():
                 for r in RESOURCES:
                     prob += pl.lpSum(
                         actions[time + j][a][ins][r]
-                        for j in range(1, min((duration[act], last_time - time)))
+                        for j in range(1, min((duration[act], deadline - time)))
                         for a in ACTIVITIES_BUFFER
                         for ins in OBJECTS
                     ) <= (1 - actions[time][act][o][0]) * len(ACTIVITIES_BUFFER) * len(
                         OBJECTS
-                    ) * min((duration[act], last_time - time))
+                    ) * min((duration[act], deadline - time))
                     # if r used this time, r is blocked for the next duration-1 time slots
                     # for j in range(1, min((duration[act], last_time - time))):
                     #     for a in ACTIVITIES:
@@ -235,10 +239,18 @@ def do():
 
     for t in TIMESLOTS:
         for r in RESOURCES[1:]:
+            # each resource is only used on objects that are involved in the activity anyways 
+            # actions[t][a][o][r] => actions[t][a][o][0] 
+            for o in OBJECTS:
+                for a in ACTIVITIES:
+                    prob += actions[t][a][o][0] >= actions[t][a][o][r]
+                    
             # each resource is available when it is used
             if t not in availability[r]:
                 prob += (
-                    pl.lpSum(actions[t][a][o][r] for a in ACTIVITIES_BUFFER for o in OBJECTS)
+                    pl.lpSum(
+                        actions[t][a][o][r] for a in ACTIVITIES_BUFFER for o in OBJECTS
+                    )
                     == 0
                 )
                 pass
@@ -312,126 +324,79 @@ def do():
 
     print("resource constraints done")
 
-    ### OLC constraints ###
-    for o in claims_range:
-        # all states of claim can only be reached once (same activity only executed once on same object)
-        for a in ACTIVITIES:
-            prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1
-        # only question_claim_b or question_claim_a
-        prob += (
-            pl.lpSum(
-                actions[t][question_claim_b][o][0] + actions[t][question_claim_a][o][0]
-                for t in TIMESLOTS
-            )
-            <= 1
-        )
-        # only decide_claim_b or decide_claim_a
-        prob += (
-            pl.lpSum(
-                actions[t][decide_claim_a][o][0] + actions[t][decide_claim_b][o][0]
-                for t in TIMESLOTS
-            )
-            <= 1
-        )
-    # all states of assessment can only be reached once (same activity only executed once on same object)
-    for o in assessments_range:
-        for a in ACTIVITIES:
-            prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1
-
     ### activity / data dependencies ###
     # state requirements
-    for o in OBJECTS:
+    for i in OBJECTS:
         for time in TIMESLOTS:
             times_before = range(0, time)
-
-            # record before question
-            if o in claims_range:
+            # build room or install toilet before install shower,
+            if i in rooms_range:
                 prob += pl.lpSum(
-                    actions[t][record_claim][o][0] for t in times_before
-                ) >= pl.lpSum(
-                    actions[t][question_claim_a][o][0]
-                    + actions[t][question_claim_b][o][0]
+                    actions[t][build_room][i][0] - actions[t][install_toilet_b][i][0]
                     for t in times_before
-                )
-
-            # question_a before assess
-            if o in assessments_range:
+                ) >= pl.lpSum(actions[t][install_shower_b][i][0] for t in times_before)
                 prob += pl.lpSum(
-                    actions[t][question_claim_a][o][0] for t in times_before
-                ) >= pl.lpSum(actions[t][assess_claim][o][0] for t in times_before)
+                    actions[t][install_toilet_b][i][0] for t in times_before
+                ) >= pl.lpSum(actions[t][install_shower_t][i][0] for t in times_before)
 
-            # question_b before decide_b
-            if o in claims_range:
+            # build room or install shower before install toilet,
+            if i in rooms_range:
                 prob += pl.lpSum(
-                    actions[t][question_claim_b][o][0] for t in times_before
-                ) >= pl.lpSum(actions[t][decide_claim_b][o][0] for t in times_before)
+                    actions[t][build_room][i][0] - actions[t][install_shower_b][i][0]
+                    for t in times_before
+                ) >= pl.lpSum(actions[t][install_toilet_b][i][0] for t in times_before)
+                prob += pl.lpSum(
+                    actions[t][install_shower_b][i][0] for t in times_before
+                ) >= pl.lpSum(actions[t][install_toilet_s][i][0] for t in times_before)
 
-            # assess and question_a before decide_a
-            if o in claims_range:
-                # question_a before decide_a on claim
+            # build room before install kitchen (and not bathroom),
+            if i in rooms_range:
                 prob += pl.lpSum(
-                    actions[t][question_claim_a][o][0] for t in times_before
-                ) >= pl.lpSum(actions[t][decide_claim_a][o][0] for t in times_before)
-            if o in assessments_range:
-                # assess before decide_a on assessment
-                prob += pl.lpSum(
-                    actions[t][assess_claim][o][0] for t in times_before
-                ) >= pl.lpSum(actions[t][decide_claim_a][o][0] for t in times_before)
-
-    # decide_a on claim and assessment only if question_a on them before (data link)
-    # order is already ensured
-    # TODO: do it or write why not possible
-    for c in type_range_map[0]:
-        for a in type_range_map[1]:
-            prob += pl.lpSum(
-                (
-                    actions[t][question_claim_a][c][r]
-                    == actions[t][question_claim_a][a][r]
-                    and actions[t][question_claim_a][a][r] == 1
-                )
-                for t in TIMESLOTS
-                for r in RESOURCES[1:]
-            ) >= pl.lpSum(
-                (
-                    actions[t][decide_claim_a][a][r] == actions[t][decide_claim_a][c][r]
-                    and actions[t][question_claim_a][a][r] == 1
-                )
-                for t in TIMESLOTS
-                for r in RESOURCES[1:]
-            )
+                    actions[t][build_room][i][0]
+                    - actions[t][install_toilet_b][i][0]
+                    - actions[t][install_shower_b][i][0]
+                    for t in times_before
+                ) >= pl.lpSum(actions[t][install_kitchen][i][0] for t in times_before)
 
     ########################
     ### define the goals ###
     ########################
 
     ### goal = claims, assessments
-    # claims to decide
+    # kitchens
     prob += (
         pl.lpSum(
-            actions[t][decide_claim_a][o][0] + actions[t][decide_claim_b][o][0]
+            actions[t][install_kitchen][i][0] for t in TIMESLOTS for i in rooms_range
+        )
+        >= kitchens_to_build
+    )
+    # bathrooms
+    prob += (
+        pl.lpSum(
+            actions[t][install_toilet_s][i][0] + actions[t][install_shower_t][i][0]
             for t in TIMESLOTS
-            for o in claims_range
+            for i in rooms_range
         )
-        >= 3
+        >= bathrooms_to_build
     )
-    # assessments to make
+    # empty rooms
     prob += (
         pl.lpSum(
-            actions[t][assess_claim][o][0] for t in TIMESLOTS for o in assessments_range
+            pl.lpSum(actions[t][build_room][i][0] for t in TIMESLOTS)
+            - pl.lpSum(
+                actions[t][install_kitchen][i][0]
+                + actions[t][install_toilet_b][i][0]
+                + actions[t][install_shower_b][i][0]
+                for t in TIMESLOTS
+            )
+            for i in rooms_range
         )
-        >= assessments_to_make
+        >= empty_rooms_to_build
     )
-    prob += (
-        pl.lpSum(
-            actions[t][decide_claim_a][o][0]
-            for t in TIMESLOTS
-            for o in assessments_range
-        )
-        >= assessments_to_make
-    )
+    print("goals done... start solving")
 
     # solve the problem
-    prob.solve()
+    prob.solve(pl.PULP_CBC_CMD(timeLimit=18000))
 
     # print the solution
     for t in TIMESLOTS:
