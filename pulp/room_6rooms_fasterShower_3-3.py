@@ -219,7 +219,7 @@ def do():
                         prob += (
                             actions[time + j][a][o][0] <= 1 - actions[time][act][o][0]
                         )
-                for r in RESOURCES:
+                for r in RESOURCES[1:]:
                     prob += pl.lpSum(
                         actions[time + j][a][ins][r]
                         for j in range(1, min((duration[act], deadline - time)))
@@ -259,7 +259,6 @@ def do():
                 pass
             for a in ACTIVITIES_BUFFER:
                 # if there is at least one object affected by resource r, the activity is done with r --> no other activity can use r at the same time
-                # TODO / DONE? make this RAM freindly
                 # taken from https://stackoverflow.com/a/26875847
                 other_as = ACTIVITIES_BUFFER[:]  # fastest way to copy
                 other_as.remove(a)

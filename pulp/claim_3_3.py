@@ -54,7 +54,7 @@ def do():
         "finish",
     ]
 
-    duration = [1, 1, 1, 1, 2, 2, 1]
+    duration = [1, 2, 1, 1, 1, 1, 1]
     role_req = [1, 2, 1, 1, 1, 1, 0]
     res_cons = [1, 1, 1, 1, 2, 2, 0]
 
@@ -273,7 +273,7 @@ def do():
                 for j in range(1, min((duration[act], deadline - t))):
                     for a in ACTIVITIES_BUFFER:
                         prob += actions[t + j][a][o][0] <= 1 - actions[t][act][o][0]
-                for r in RESOURCES:
+                for r in RESOURCES[1:]:
                     prob += pl.lpSum(
                         actions[t + j][a][ins][r]
                         for j in range(1, min((duration[act], deadline - t)))
@@ -455,7 +455,7 @@ def do():
     # )
     
     # solve the problem
-    prob.solve()
+    prob.solve(pl.PULP_CBC_CMD(timeLimit=18000))
 
     # print the solution
     for t in TIMESLOTS:

@@ -20,13 +20,13 @@ def do():
     ### define variables for the process ###
     ########################################
 
-    rooms = 6
-    object_count = rooms
 
     kitchens_to_build = 1
     bathrooms_to_build = 1
     empty_rooms_to_build = 4
-    deadline = 10
+
+    object_count = kitchens_to_build + bathrooms_to_build + empty_rooms_to_build
+    deadline = 50
     first_time = 0
 
     #######################################
@@ -54,7 +54,7 @@ def do():
         "finish",
     ]
 
-    duration = [1, 1,1, 1, 1, 2, 1]
+    duration = [1, 2, 2, 1, 1, 2, 1]
     role_req = [1, 2, 2, 3, 3, 4, 0]
     res_cons = [1, 1, 1, 1, 1, 2, 0]
 
@@ -64,9 +64,10 @@ def do():
 
     ### resources ###
 
-    resource_names = ["-", "Bob", "Sandy", "Kay", "Tina"]
+    resource_names = ["-", "Bob", "Bill", "Sandy", "Kay", "Tina"]
     role_names = ["-", "builder", "shower-crew", "toilet-crew", "kitchen-crew"]
     availability = [
+        range(first_time, deadline + 1),
         range(first_time, deadline + 1),
         range(first_time, deadline + 1),
         range(first_time, deadline + 1),
@@ -78,22 +79,24 @@ def do():
         1,
         2,
         3,
-        4
+        4,
+        5,
     ]  # no resource / started, Bob, Bill, Sandy, Kay, Tina
     roles = [0, 1, 2, 3, 4]  # nothing, builder, shower-crew, toilet-crew, kitchen-crew
     resource_roles_map = [
         [0],  # no role, no resource / started
         [1],  # Bob -> builder
+        [1],  # Bill -> builder
         [2, 4],  # Sandy -> shower-crew, kitchen-crew
         [4],  # Kay -> kitchen-crew
         [3],  # Tina -> toilet-crew
     ]
     roles_resources_map = [
         [0],  # no role, no resource / started
-        [1],  # Builder: Bob, Bill
-        [2],  # Shower-Crew: Sandy
-        [4],  # Toilet-Crew: Tina
-        [2,3],  # Kitchen-Crew: Sandy, Kay
+        [1, 2],  # Builder: Bob, Bill
+        [3],  # Shower-Crew: Sandy
+        [5],  # Toilet-Crew: Tina
+        [3, 4],  # Kitchen-Crew: Sandy, Kay
     ]
 
     #####################################
@@ -102,7 +105,7 @@ def do():
 
     # claims, assessments
     OBJECTS = array.array("b", range(object_count))
-    rooms_range = range(rooms)
+    rooms_range = range(object_count)
     type_range_map = [rooms_range]
 
     def get_type(object_index):
@@ -396,7 +399,7 @@ def do():
     print("goals done... start solving")
 
     # solve the problem
-    prob.solve()
+    prob.solve(pl.PULP_CBC_CMD(timeLimit=18000))
 
     # print the solution
     for t in TIMESLOTS:

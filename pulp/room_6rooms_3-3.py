@@ -26,7 +26,7 @@ def do():
     empty_rooms_to_build = 0
 
     object_count = kitchens_to_build + bathrooms_to_build + empty_rooms_to_build
-    deadline = 10
+    deadline = 20
     first_time = 0
 
     #######################################
@@ -219,7 +219,7 @@ def do():
                         prob += (
                             actions[time + j][a][o][0] <= 1 - actions[time][act][o][0]
                         )
-                for r in RESOURCES:
+                for r in RESOURCES[1:]:
                     prob += pl.lpSum(
                         actions[time + j][a][ins][r]
                         for j in range(1, min((duration[act], deadline - time)))
@@ -399,7 +399,7 @@ def do():
     print("goals done... start solving")
 
     # solve the problem
-    prob.solve()
+    prob.solve(pl.PULP_CBC_CMD(timeLimit=18000))
 
     # print the solution
     for t in TIMESLOTS:

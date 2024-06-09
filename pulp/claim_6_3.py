@@ -1,5 +1,6 @@
 import array
-#from memory_profiler import profile
+
+# from memory_profiler import profile
 import pulp as pl
 
 # TODO: think aubout data links.
@@ -27,7 +28,7 @@ def do():
     claims_to_decide = 6
     assessments_to_make = 3
 
-    deadline = 15
+    deadline = 20
 
     #######################################
     ### define activities and resources ###
@@ -54,7 +55,7 @@ def do():
         "finish",
     ]
 
-    duration = [1, 1, 1, 1, 2, 2, 1]
+    duration = [1, 2, 1, 1, 1, 1, 1]
     role_req = [1, 2, 1, 1, 1, 1, 0]
     res_cons = [1, 1, 1, 1, 2, 2, 0]
 
@@ -273,7 +274,7 @@ def do():
                 for j in range(1, min((duration[act], deadline - t))):
                     for a in ACTIVITIES_BUFFER:
                         prob += actions[t + j][a][o][0] <= 1 - actions[t][act][o][0]
-                for r in RESOURCES:
+                for r in RESOURCES[1:]:
                     prob += pl.lpSum(
                         actions[t + j][a][ins][r]
                         for j in range(1, min((duration[act], deadline - t)))
@@ -453,9 +454,9 @@ def do():
     #     #/ (res_cons[question_claim_a])
     #     >= 1
     # )
-    
+
     # solve the problem
-    prob.solve()
+    prob.solve(pl.PULP_CBC_CMD(timeLimit=60000))
 
     # print the solution
     for t in TIMESLOTS:

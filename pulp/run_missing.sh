@@ -1,16 +1,24 @@
 #! /usr/bin/bash
 
-./run.sh room_3rooms_fasterShower
-./run.sh room_3rooms_1builder_fasterShower
-./run.sh room_6rooms_fasterShower
-./run.sh room_6rooms_fasterShower_3-3
-./run.sh room_6rooms_1builder_fasterShower
-./run.sh room_6rooms_1builder_fasterShower_3-3
+for i in {1..3} 
+do
+    ./run.sh claim_3_1
+    echo "Done with claim_3_1, iteration $i"
+    ./run.sh claim_3_3 
+    echo "Done with claim_3_3, iteration $i"
+done
+echo "Done with all iterations"
 
-./run.sh claim_3_1
-./run.sh claim_3_3
+./run.sh claim_3_1_50
+echo "Done with claim_3_1_50"
+./run.sh claim_3_3_50
+echo "Done with claim_3_3_50"
+./run.sh claim_3_1_100
+echo "Done with claim_3_1_100"
+./run.sh claim_3_3_100
+echo "Done with claim_3_3_100"
+
 ./run.sh claim_6_1
+echo "Done with claim_6_1"
 ./run.sh claim_6_3
-
-./run.sh room_10rooms_fasterShower
-./run.sh room_10rooms_1builder_fasterShower
+echo "Done with claim_6_3"

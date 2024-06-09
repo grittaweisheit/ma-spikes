@@ -216,7 +216,7 @@ def do():
                         prob += (
                             actions[time + j][a][o][0] <= 1 - actions[time][act][o][0]
                         )
-                for r in RESOURCES:
+                for r in RESOURCES[1:]:
                     prob += pl.lpSum(
                         actions[time + j][a][ins][r]
                         for j in range(1, min((duration[act], deadline - time)))

@@ -54,7 +54,7 @@ def do():
         "finish",
     ]
 
-    duration = [1, 1, 1, 1, 2, 2, 1]
+    duration = [1, 2, 1, 1, 1, 1, 1]
     role_req = [1, 2, 1, 1, 1, 1, 0]
     res_cons = [1, 1, 1, 1, 2, 2, 0]
 
@@ -69,7 +69,7 @@ def do():
     role_names = ["-", "worker", "expert"]
     availability = [
         range(0, deadline + 1),  # no resource / started, always available
-        range(0, 5 + 1),
+        range(0, deadline +1),
         range(0, deadline + 1),
         range(0, deadline + 1),
         range(3, deadline + 1),
@@ -273,15 +273,12 @@ def do():
                 for j in range(1, min((duration[act], deadline - t))):
                     for a in ACTIVITIES_BUFFER:
                         prob += actions[t + j][a][o][0] <= 1 - actions[t][act][o][0]
-                for r in RESOURCES:
+                for r in RESOURCES[1:]:
                     prob += pl.lpSum(
                         actions[t + j][a][ins][r]
-                        for j in range(1, min((duration[act], deadline - t)))
                         for a in ACTIVITIES_BUFFER
                         for ins in OBJECTS
-                    ) <= (1 - actions[t][act][o][0]) * len(ACTIVITIES_BUFFER) * len(
-                        OBJECTS
-                    ) * min((duration[act], deadline - t))
+                        ) <= (1 - actions[t][act][o][r])  * 100
                     # if r used this time, r is blocked for the next duration-1 time slots
                     # for j in range(1, min((duration[act], last_time - time))):
                     #     for a in ACTIVITIES:
