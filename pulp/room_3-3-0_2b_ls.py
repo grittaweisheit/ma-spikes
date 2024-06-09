@@ -20,13 +20,13 @@ def do():
     ### define variables for the process ###
     ########################################
 
-    rooms = 3
-    object_count = rooms
 
-    kitchens_to_build = 1
-    bathrooms_to_build = 1
-    empty_rooms_to_build = 1
-    deadline = 10
+    kitchens_to_build = 3
+    bathrooms_to_build = 3
+    empty_rooms_to_build = 0
+
+    object_count = kitchens_to_build + bathrooms_to_build + empty_rooms_to_build
+    deadline = 20
     first_time = 0
 
     #######################################
@@ -64,9 +64,10 @@ def do():
 
     ### resources ###
 
-    resource_names = ["-", "Bob", "Sandy", "Kay", "Tina"]
+    resource_names = ["-", "Bob", "Bill", "Sandy", "Kay", "Tina"]
     role_names = ["-", "builder", "shower-crew", "toilet-crew", "kitchen-crew"]
     availability = [
+        range(first_time, deadline + 1),
         range(first_time, deadline + 1),
         range(first_time, deadline + 1),
         range(first_time, deadline + 1),
@@ -78,22 +79,24 @@ def do():
         1,
         2,
         3,
-        4
+        4,
+        5,
     ]  # no resource / started, Bob, Bill, Sandy, Kay, Tina
     roles = [0, 1, 2, 3, 4]  # nothing, builder, shower-crew, toilet-crew, kitchen-crew
     resource_roles_map = [
         [0],  # no role, no resource / started
         [1],  # Bob -> builder
+        [1],  # Bill -> builder
         [2, 4],  # Sandy -> shower-crew, kitchen-crew
         [4],  # Kay -> kitchen-crew
         [3],  # Tina -> toilet-crew
     ]
     roles_resources_map = [
         [0],  # no role, no resource / started
-        [1],  # Builder: Bob, Bill
-        [2],  # Shower-Crew: Sandy
-        [4],  # Toilet-Crew: Tina
-        [2,3],  # Kitchen-Crew: Sandy, Kay
+        [1, 2],  # Builder: Bob, Bill
+        [3],  # Shower-Crew: Sandy
+        [5],  # Toilet-Crew: Tina
+        [3, 4],  # Kitchen-Crew: Sandy, Kay
     ]
 
     #####################################
@@ -102,7 +105,7 @@ def do():
 
     # claims, assessments
     OBJECTS = array.array("b", range(object_count))
-    rooms_range = range(rooms)
+    rooms_range = range(object_count)
     type_range_map = [rooms_range]
 
     def get_type(object_index):
@@ -238,7 +241,7 @@ def do():
     ### resource constraints ###
 
     for t in TIMESLOTS:
-        for r in RESOURCES[1:]: 
+        for r in RESOURCES[1:]:
             # each resource is only used on objects that are involved in the activity anyways 
             # actions[t][a][o][r] => actions[t][a][o][0] 
             for o in OBJECTS:
@@ -324,6 +327,29 @@ def do():
 
     print("resource constraints done")
 
+    ### OLC constraints ###
+    for o in rooms_range:
+        # all states of room can only be reached once (same activity only executed once on same object)
+        for a in ACTIVITIES:
+            prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1        
+        
+        # only install_shower on object
+        prob += (
+            pl.lpSum(
+                actions[t][install_shower_b][o][0] + actions[t][install_shower_t][o][0]
+                for t in TIMESLOTS
+            )
+            <= 1
+        )
+        # only one install_toilet on object
+        prob += (
+            pl.lpSum(
+                actions[t][install_toilet_b][o][0] + actions[t][install_toilet_s][o][0]
+                for t in TIMESLOTS
+            )
+            <= 1
+        )
+
     ### activity / data dependencies ###
     # state requirements
     for i in OBJECTS:
@@ -396,7 +422,7 @@ def do():
     print("goals done... start solving")
 
     # solve the problem
-    prob.solve()
+    prob.solve(pl.PULP_CBC_CMD(timeLimit=48000))
 
     # print the solution
     for t in TIMESLOTS:

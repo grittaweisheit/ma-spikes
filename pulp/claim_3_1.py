@@ -276,9 +276,12 @@ def do():
                 for r in RESOURCES[1:]:
                     prob += pl.lpSum(
                         actions[t + j][a][ins][r]
+                        for j in range(1, min((duration[act], deadline - t)))
                         for a in ACTIVITIES_BUFFER
                         for ins in OBJECTS
-                        ) <= (1 - actions[t][act][o][r])  * 100
+                    ) <= (1 - actions[t][act][o][r]) * len(ACTIVITIES_BUFFER) * len(
+                        OBJECTS
+                    ) * min((duration[act], deadline - t))
                     # if r used this time, r is blocked for the next duration-1 time slots
                     # for j in range(1, min((duration[act], last_time - time))):
                     #     for a in ACTIVITIES:

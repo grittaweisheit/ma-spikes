@@ -456,7 +456,7 @@ def do():
     # )
 
     # solve the problem
-    prob.solve(pl.PULP_CBC_CMD(timeLimit=60000))
+    prob.solve(pl.PULP_CBC_CMD(timeLimit=48000))
 
     # print the solution
     for t in TIMESLOTS:

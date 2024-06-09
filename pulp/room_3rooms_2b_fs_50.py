@@ -20,13 +20,13 @@ def do():
     ### define variables for the process ###
     ########################################
 
+    rooms = 3
+    object_count = rooms
 
     kitchens_to_build = 1
     bathrooms_to_build = 1
-    empty_rooms_to_build = 4
-
-    object_count = kitchens_to_build + bathrooms_to_build + empty_rooms_to_build
-    deadline = 10
+    empty_rooms_to_build = 1
+    deadline = 50
     first_time = 0
 
     #######################################
@@ -54,7 +54,7 @@ def do():
         "finish",
     ]
 
-    duration = [1, 2, 2, 1, 1, 2, 1]
+    duration = [1, 1,1, 1, 1, 2, 1]
     role_req = [1, 2, 2, 3, 3, 4, 0]
     res_cons = [1, 1, 1, 1, 1, 2, 0]
 
@@ -105,7 +105,7 @@ def do():
 
     # claims, assessments
     OBJECTS = array.array("b", range(object_count))
-    rooms_range = range(object_count)
+    rooms_range = range(rooms)
     type_range_map = [rooms_range]
 
     def get_type(object_index):
@@ -241,13 +241,13 @@ def do():
     ### resource constraints ###
 
     for t in TIMESLOTS:
-        for r in RESOURCES[1:]:
+        for r in RESOURCES[1:]:            
             # each resource is only used on objects that are involved in the activity anyways 
             # actions[t][a][o][r] => actions[t][a][o][0] 
             for o in OBJECTS:
                 for a in ACTIVITIES:
                     prob += actions[t][a][o][0] >= actions[t][a][o][r]
-                    
+            
             # each resource is available when it is used
             if t not in availability[r]:
                 prob += (
@@ -326,6 +326,29 @@ def do():
                 ) == pl.lpSum(actions[t][a][o][r] for r in RESOURCES[1:])
 
     print("resource constraints done")
+
+    ### OLC constraints ###
+    for o in rooms_range:
+        # all states of room can only be reached once (same activity only executed once on same object)
+        for a in ACTIVITIES:
+            prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1        
+        
+        # only install_shower on object
+        prob += (
+            pl.lpSum(
+                actions[t][install_shower_b][o][0] + actions[t][install_shower_t][o][0]
+                for t in TIMESLOTS
+            )
+            <= 1
+        )
+        # only one install_toilet on object
+        prob += (
+            pl.lpSum(
+                actions[t][install_toilet_b][o][0] + actions[t][install_toilet_s][o][0]
+                for t in TIMESLOTS
+            )
+            <= 1
+        )
 
     ### activity / data dependencies ###
     # state requirements

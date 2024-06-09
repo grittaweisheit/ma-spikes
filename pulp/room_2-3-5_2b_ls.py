@@ -20,13 +20,13 @@ def do():
     ### define variables for the process ###
     ########################################
 
+    rooms = 10
+    object_count = rooms
 
-    kitchens_to_build = 3
+    kitchens_to_build = 2
     bathrooms_to_build = 3
-    empty_rooms_to_build = 0
-
-    object_count = kitchens_to_build + bathrooms_to_build + empty_rooms_to_build
-    deadline = 50
+    empty_rooms_to_build = 5
+    deadline = 15
     first_time = 0
 
     #######################################
@@ -105,7 +105,7 @@ def do():
 
     # claims, assessments
     OBJECTS = array.array("b", range(object_count))
-    rooms_range = range(object_count)
+    rooms_range = range(rooms)
     type_range_map = [rooms_range]
 
     def get_type(object_index):
@@ -326,6 +326,29 @@ def do():
                 ) == pl.lpSum(actions[t][a][o][r] for r in RESOURCES[1:])
 
     print("resource constraints done")
+
+    ### OLC constraints ###
+    for o in rooms_range:
+        # all states of room can only be reached once (same activity only executed once on same object)
+        for a in ACTIVITIES:
+            prob += pl.lpSum(actions[t][a][o][0] for t in TIMESLOTS) <= 1        
+        
+        # only install_shower on object
+        prob += (
+            pl.lpSum(
+                actions[t][install_shower_b][o][0] + actions[t][install_shower_t][o][0]
+                for t in TIMESLOTS
+            )
+            <= 1
+        )
+        # only one install_toilet on object
+        prob += (
+            pl.lpSum(
+                actions[t][install_toilet_b][o][0] + actions[t][install_toilet_s][o][0]
+                for t in TIMESLOTS
+            )
+            <= 1
+        )
 
     ### activity / data dependencies ###
     # state requirements
