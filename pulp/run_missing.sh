@@ -60,3 +60,6 @@ echo "Done with room_3-3-0_2b_ls"
 
 ./run.sh claim_6_3
 echo "Done with claim_6_3"
+
+./run.sh room_10rooms_fasterShower
+echo "Done with room_10rooms_fasterShower"

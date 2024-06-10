@@ -225,7 +225,7 @@ def do():
                         for j in range(1, min((duration[act], deadline - time)))
                         for a in ACTIVITIES_BUFFER
                         for ins in OBJECTS
-                    ) <= (1 - actions[time][act][o][0]) * len(ACTIVITIES_BUFFER) * len(
+                    ) <= (1 - actions[time][act][o][r]) * len(ACTIVITIES_BUFFER) * len(
                         OBJECTS
                     ) * min((duration[act], deadline - time))
                     # if r used this time, r is blocked for the next duration-1 time slots
