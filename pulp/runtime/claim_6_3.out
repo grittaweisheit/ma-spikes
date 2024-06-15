@@ -1,0 +1,367 @@
+Welcome to the CBC MILP Solver 
+Version: 2.10.3 
+Build Date: Dec 15 2019 
+
+command line - /home/gweisheit/.local/lib/python3.8/site-packages/pulp/solverdir/cbc/linux/64/cbc /tmp/80703414c3174b698b1fd12f1e8a3321-pulp.mps -sec 48000 -timeMode elapsed -branch -printingOptions all -solution /tmp/80703414c3174b698b1fd12f1e8a3321-pulp.sol (default strategy 1)
+At line 2 NAME          MODEL
+At line 3 ROWS
+At line 20966 COLUMNS
+At line 178861 RHS
+At line 199823 BOUNDS
+At line 206440 ENDATA
+Problem MODEL has 20961 rows, 6616 columns and 136282 elements
+Coin0008I MODEL read with 0 errors
+seconds was changed from 1e+100 to 48000
+Option for timeMode changed from cpu to elapsed
+Continuous objective value is 0.247926 - 0.58 seconds
+Cgl0002I 2637 variables fixed
+Cgl0003I 212 fixed, 0 tightened bounds, 3060 strengthened rows, 3093 substitutions
+Cgl0003I 46 fixed, 0 tightened bounds, 955 strengthened rows, 476 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 1105 strengthened rows, 313 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 1895 strengthened rows, 0 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 2035 strengthened rows, 0 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 2314 strengthened rows, 0 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 1826 strengthened rows, 0 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 1722 strengthened rows, 0 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 1648 strengthened rows, 0 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 1591 strengthened rows, 0 substitutions
+Cgl0003I 0 fixed, 0 tightened bounds, 1528 strengthened rows, 0 substitutions
+Cgl0004I processed model has 3914 rows, 1960 columns (1960 integer (1959 of which binary)) and 48739 elements
+Cutoff increment increased from 1e-05 to 0.9999
+Cbc0045I 1 integer variables out of 1960 objects (1960 integer) have cost of 1 - high priority
+Cbc0045I branch on satisfied Y create fake objective Y random cost Y
+Cbc0038I Initial state - 659 integers unsatisfied sum - 49.3222
+Cbc0038I Pass   1: (11.52 seconds) suminf.    8.00000 (74) obj. 18.2857 iterations 2418
+Cbc0038I Pass   2: (11.73 seconds) suminf.    0.44413 (12) obj. 19 iterations 789
+Cbc0038I Pass   3: (11.82 seconds) suminf.    0.33519 (6) obj. 19 iterations 317
+Cbc0038I Pass   4: (11.87 seconds) suminf.    0.31082 (9) obj. 19.0476 iterations 110
+Cbc0038I Pass   5: (11.98 seconds) suminf.    0.00000 (0) obj. 20 iterations 331
+Cbc0038I Solution found of 20
+Cbc0038I Cleaned solution of 20
+Cbc0038I Before mini branch and bound, 1259 integers at bound fixed and 0 continuous
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 2324 rows 496 columns - 12 fixed gives 425, 136 - ok now
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 348 rows 109 columns
+Cbc0038I Mini branch and bound did not improve solution (13.10 seconds)
+Cbc0038I Round again with cutoff of 17.1973
+Cbc0038I Pass   6: (13.14 seconds) suminf.   16.22385 (78) obj. 17 iterations 76
+Cbc0038I Pass   7: (13.36 seconds) suminf.    2.13321 (23) obj. 17.1973 iterations 939
+Cbc0038I Pass   8: (13.39 seconds) suminf.    1.62068 (22) obj. 17.1973 iterations 92
+Cbc0038I Pass   9: (13.45 seconds) suminf.    2.56364 (17) obj. 15 iterations 211
+Cbc0038I Pass  10: (13.58 seconds) suminf.    1.09465 (13) obj. 17.1973 iterations 226
+Cbc0038I Pass  11: (13.67 seconds) suminf.    1.30930 (10) obj. 17.1973 iterations 235
+Cbc0038I Pass  12: (13.69 seconds) suminf.    1.10457 (9) obj. 17.1973 iterations 12
+Cbc0038I Pass  13: (13.74 seconds) suminf.    0.65098 (4) obj. 16 iterations 159
+Cbc0038I Pass  14: (13.76 seconds) suminf.    0.57101 (3) obj. 17.1973 iterations 35
+Cbc0038I Pass  15: (14.01 seconds) suminf.    4.02251 (68) obj. 17.1973 iterations 850
+Cbc0038I Pass  16: (14.13 seconds) suminf.    1.37602 (19) obj. 17.1973 iterations 553
+Cbc0038I Pass  17: (14.41 seconds) suminf.    0.54545 (2) obj. 17 iterations 819
+Cbc0038I Pass  18: (14.45 seconds) suminf.    0.70690 (3) obj. 17.1973 iterations 145
+Cbc0038I Pass  19: (14.49 seconds) suminf.    0.54545 (2) obj. 17 iterations 97
+Cbc0038I Pass  20: (14.73 seconds) suminf.    1.09091 (4) obj. 17 iterations 789
+Cbc0038I Pass  21: (14.86 seconds) suminf.    0.75785 (3) obj. 17.1973 iterations 505
+Cbc0038I Pass  22: (14.92 seconds) suminf.    0.60000 (2) obj. 17 iterations 172
+Cbc0038I Pass  23: (15.19 seconds) suminf.   13.48186 (49) obj. 17.1973 iterations 908
+Cbc0038I Pass  24: (15.37 seconds) suminf.    1.59866 (8) obj. 17.1973 iterations 750
+Cbc0038I Pass  25: (15.44 seconds) suminf.    1.03812 (7) obj. 17.1973 iterations 191
+Cbc0038I Pass  26: (15.50 seconds) suminf.    0.30000 (2) obj. 17 iterations 169
+Cbc0038I Pass  27: (15.52 seconds) suminf.    0.47759 (3) obj. 17.1973 iterations 42
+Cbc0038I Pass  28: (15.74 seconds) suminf.    3.06115 (44) obj. 17.1973 iterations 735
+Cbc0038I Pass  29: (15.99 seconds) suminf.    1.40891 (19) obj. 17.1973 iterations 851
+Cbc0038I Pass  30: (16.12 seconds) suminf.    4.77778 (11) obj. 17 iterations 401
+Cbc0038I Pass  31: (16.19 seconds) suminf.    1.42992 (10) obj. 17.1973 iterations 184
+Cbc0038I Pass  32: (16.21 seconds) suminf.    1.07503 (9) obj. 17.1973 iterations 24
+Cbc0038I Pass  33: (16.25 seconds) suminf.    1.11839 (7) obj. 17.1973 iterations 122
+Cbc0038I Pass  34: (16.27 seconds) suminf.    1.11839 (7) obj. 17.1973 iterations 49
+Cbc0038I Pass  35: (16.32 seconds) suminf.    0.88527 (7) obj. 17.1973 iterations 153
+Cbc0038I Pass  36: (16.34 seconds) suminf.    0.88527 (7) obj. 17.1973 iterations 33
+Cbc0038I Pass  37: (16.60 seconds) suminf.    6.35996 (47) obj. 14.12 iterations 853
+Cbc0038I Pass  38: (16.75 seconds) suminf.    2.03257 (26) obj. 17.1973 iterations 579
+Cbc0038I Pass  39: (16.77 seconds) suminf.    1.45179 (23) obj. 17.1973 iterations 44
+Cbc0038I Pass  40: (16.86 seconds) suminf.    2.01923 (10) obj. 15 iterations 227
+Cbc0038I Pass  41: (16.93 seconds) suminf.    0.80687 (7) obj. 17.1973 iterations 197
+Cbc0038I Pass  42: (16.98 seconds) suminf.    1.26531 (8) obj. 17.1973 iterations 116
+Cbc0038I Pass  43: (17.00 seconds) suminf.    1.05830 (7) obj. 17.1973 iterations 37
+Cbc0038I Pass  44: (17.05 seconds) suminf.    0.46154 (2) obj. 17 iterations 125
+Cbc0038I Pass  45: (17.08 seconds) suminf.    0.62850 (3) obj. 17.1973 iterations 57
+Cbc0038I Pass  46: (17.35 seconds) suminf.    5.66952 (70) obj. 17.1973 iterations 876
+Cbc0038I Pass  47: (17.50 seconds) suminf.    1.21543 (19) obj. 17.1973 iterations 581
+Cbc0038I Pass  48: (17.57 seconds) suminf.    0.72603 (7) obj. 17.1973 iterations 235
+Cbc0038I Pass  49: (17.61 seconds) suminf.    0.72603 (7) obj. 17.1973 iterations 84
+Cbc0038I Pass  50: (17.64 seconds) suminf.    0.92717 (7) obj. 17.1973 iterations 100
+Cbc0038I Pass  51: (17.65 seconds) suminf.    0.92717 (7) obj. 17.1973 iterations 6
+Cbc0038I Pass  52: (17.68 seconds) suminf.    0.72603 (7) obj. 17.1973 iterations 98
+Cbc0038I Pass  53: (17.93 seconds) suminf.   28.30797 (89) obj. 14.8293 iterations 877
+Cbc0038I Pass  54: (18.03 seconds) suminf.    7.14067 (36) obj. 16 iterations 542
+Cbc0038I Pass  55: (18.16 seconds) suminf.    1.89153 (17) obj. 16 iterations 452
+Cbc0038I Pass  56: (18.22 seconds) suminf.    1.48720 (16) obj. 16.25 iterations 200
+Cbc0038I Pass  57: (18.34 seconds) suminf.    1.27893 (23) obj. 17.1973 iterations 396
+Cbc0038I Pass  58: (18.36 seconds) suminf.    1.05596 (17) obj. 17.1973 iterations 36
+Cbc0038I Pass  59: (18.48 seconds) suminf.    1.46694 (16) obj. 16.1379 iterations 403
+Cbc0038I Pass  60: (18.48 seconds) suminf.    1.46694 (16) obj. 16.1379 iterations 0
+Cbc0038I Pass  61: (18.58 seconds) suminf.    4.87368 (13) obj. 16 iterations 256
+Cbc0038I Pass  62: (18.60 seconds) suminf.    1.85564 (16) obj. 16 iterations 40
+Cbc0038I Pass  63: (18.64 seconds) suminf.    1.91126 (20) obj. 16.3168 iterations 153
+Cbc0038I Pass  64: (18.74 seconds) suminf.    0.47626 (5) obj. 17.1973 iterations 252
+Cbc0038I Pass  65: (18.75 seconds) suminf.    0.47626 (5) obj. 17.1973 iterations 32
+Cbc0038I Pass  66: (18.78 seconds) suminf.    1.08553 (6) obj. 16.25 iterations 53
+Cbc0038I Pass  67: (18.79 seconds) suminf.    0.66734 (5) obj. 17.1973 iterations 5
+Cbc0038I Pass  68: (18.82 seconds) suminf.    0.56677 (5) obj. 17.1973 iterations 49
+Cbc0038I Pass  69: (18.83 seconds) suminf.    0.56677 (5) obj. 17.1973 iterations 20
+Cbc0038I Pass  70: (18.87 seconds) suminf.    0.30000 (2) obj. 17 iterations 86
+Cbc0038I Pass  71: (18.89 seconds) suminf.    0.47759 (3) obj. 17.1973 iterations 37
+Cbc0038I Pass  72: (19.21 seconds) suminf.   10.83280 (37) obj. 17.1973 iterations 1024
+Cbc0038I Pass  73: (19.32 seconds) suminf.    2.18182 (15) obj. 16 iterations 500
+Cbc0038I No solution found this major pass
+Cbc0038I After 19.32 seconds - Feasibility pump exiting with objective of 20 - took 8.63 seconds
+Cbc0012I Integer solution of 20 found by feasibility pump after 0 iterations and 0 nodes (19.33 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 2194 rows 467 columns
+Cbc0031I 71 added rows had average density of 11.014085
+Cbc0013I At root node, 71 cuts changed objective from 0.97228009 to 5 in 12 passes
+Cbc0014I Cut generator 0 (Probing) - 30876 row cuts average 5.4 elements, 6 column cuts (6 active)  in 0.944 seconds - new frequency is 1
+Cbc0014I Cut generator 1 (Gomory) - 129 row cuts average 108.9 elements, 0 column cuts (0 active)  in 0.564 seconds - new frequency is 1
+Cbc0014I Cut generator 2 (Knapsack) - 2 row cuts average 11.5 elements, 0 column cuts (0 active)  in 0.078 seconds - new frequency is -100
+Cbc0014I Cut generator 3 (Clique) - 17 row cuts average 5.5 elements, 0 column cuts (0 active)  in 0.047 seconds - new frequency is -100
+Cbc0014I Cut generator 4 (MixedIntegerRounding2) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.070 seconds - new frequency is -100
+Cbc0014I Cut generator 5 (FlowCover) - 0 row cuts average 0.0 elements, 0 column cuts (0 active)  in 0.027 seconds - new frequency is -100
+Cbc0014I Cut generator 6 (TwoMirCuts) - 1857 row cuts average 27.3 elements, 0 column cuts (0 active)  in 0.398 seconds - new frequency is 1
+Cbc0014I Cut generator 7 (ZeroHalf) - 258 row cuts average 13.1 elements, 0 column cuts (0 active)  in 0.731 seconds - new frequency is 1
+Cbc0010I After 0 nodes, 1 on tree, 20 best solution, best possible 5 (65.77 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 372 rows 133 columns
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 475 rows 168 columns
+Cbc0010I After 100 nodes, 12 on tree, 20 best solution, best possible 8 (110.53 seconds)
+Cbc0010I After 200 nodes, 5 on tree, 20 best solution, best possible 8 (138.61 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 334 rows 135 columns
+Cbc0010I After 300 nodes, 5 on tree, 20 best solution, best possible 8 (158.01 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 397 rows 146 columns
+Cbc0010I After 400 nodes, 8 on tree, 20 best solution, best possible 9 (202.13 seconds)
+Cbc0010I After 500 nodes, 12 on tree, 20 best solution, best possible 9 (226.20 seconds)
+Cbc0010I After 600 nodes, 20 on tree, 20 best solution, best possible 9 (243.94 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 336 rows 124 columns
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 367 rows 128 columns
+Cbc0010I After 700 nodes, 21 on tree, 20 best solution, best possible 9 (264.96 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 209 rows 78 columns
+Cbc0010I After 800 nodes, 19 on tree, 20 best solution, best possible 9 (284.34 seconds)
+Cbc0010I After 900 nodes, 28 on tree, 20 best solution, best possible 9 (306.39 seconds)
+Cbc0010I After 1000 nodes, 27 on tree, 20 best solution, best possible 9 (325.02 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 288 rows 94 columns
+Cbc0010I After 1100 nodes, 22 on tree, 20 best solution, best possible 9 (347.42 seconds)
+Cbc0010I After 1200 nodes, 37 on tree, 20 best solution, best possible 9 (366.60 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 371 rows 122 columns
+Cbc0010I After 1300 nodes, 34 on tree, 20 best solution, best possible 9 (390.18 seconds)
+Cbc0010I After 1400 nodes, 36 on tree, 20 best solution, best possible 9 (409.19 seconds)
+Cbc0010I After 1500 nodes, 28 on tree, 20 best solution, best possible 9 (430.79 seconds)
+Cbc0010I After 1600 nodes, 28 on tree, 20 best solution, best possible 9 (449.00 seconds)
+Cbc0010I After 1700 nodes, 28 on tree, 20 best solution, best possible 9 (469.92 seconds)
+Cbc0010I After 1800 nodes, 19 on tree, 20 best solution, best possible 9 (487.67 seconds)
+Cbc0010I After 1900 nodes, 30 on tree, 20 best solution, best possible 9 (511.79 seconds)
+Cbc0010I After 2000 nodes, 25 on tree, 20 best solution, best possible 9 (532.14 seconds)
+Cbc0010I After 2100 nodes, 17 on tree, 20 best solution, best possible 9 (547.65 seconds)
+Cbc0010I After 2200 nodes, 18 on tree, 20 best solution, best possible 9 (566.35 seconds)
+Cbc0010I After 2300 nodes, 14 on tree, 20 best solution, best possible 9 (583.08 seconds)
+Cbc0010I After 2400 nodes, 20 on tree, 20 best solution, best possible 9 (602.89 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 301 rows 113 columns
+Cbc0010I After 2500 nodes, 17 on tree, 20 best solution, best possible 9 (620.53 seconds)
+Cbc0010I After 2600 nodes, 24 on tree, 20 best solution, best possible 9 (636.42 seconds)
+Cbc0010I After 2700 nodes, 14 on tree, 20 best solution, best possible 9 (653.17 seconds)
+Cbc0010I After 2800 nodes, 14 on tree, 20 best solution, best possible 9 (670.40 seconds)
+Cbc0010I After 2900 nodes, 22 on tree, 20 best solution, best possible 9 (684.80 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 330 rows 112 columns
+Cbc0010I After 3000 nodes, 17 on tree, 20 best solution, best possible 9 (700.74 seconds)
+Cbc0010I After 3100 nodes, 16 on tree, 20 best solution, best possible 9 (716.88 seconds)
+Cbc0010I After 3200 nodes, 15 on tree, 20 best solution, best possible 9 (733.91 seconds)
+Cbc0010I After 3300 nodes, 14 on tree, 20 best solution, best possible 9 (749.07 seconds)
+Cbc0010I After 3400 nodes, 13 on tree, 20 best solution, best possible 9 (763.96 seconds)
+Cbc0010I After 3500 nodes, 8 on tree, 20 best solution, best possible 9 (777.36 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 434 rows 170 columns
+Cbc0010I After 3600 nodes, 22 on tree, 20 best solution, best possible 9 (803.84 seconds)
+Cbc0010I After 3700 nodes, 19 on tree, 20 best solution, best possible 9 (823.78 seconds)
+Cbc0010I After 3800 nodes, 25 on tree, 20 best solution, best possible 9 (842.01 seconds)
+Cbc0010I After 3900 nodes, 18 on tree, 20 best solution, best possible 9 (860.27 seconds)
+Cbc0010I After 4000 nodes, 24 on tree, 20 best solution, best possible 9 (877.52 seconds)
+Cbc0010I After 4100 nodes, 22 on tree, 20 best solution, best possible 9 (894.55 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 386 rows 140 columns
+Cbc0010I After 4200 nodes, 20 on tree, 20 best solution, best possible 9 (908.98 seconds)
+Cbc0010I After 4300 nodes, 15 on tree, 20 best solution, best possible 9 (927.68 seconds)
+Cbc0010I After 4400 nodes, 15 on tree, 20 best solution, best possible 9 (945.49 seconds)
+Cbc0010I After 4500 nodes, 12 on tree, 20 best solution, best possible 9 (962.64 seconds)
+Cbc0010I After 4600 nodes, 10 on tree, 20 best solution, best possible 9 (979.91 seconds)
+Cbc0010I After 4700 nodes, 12 on tree, 20 best solution, best possible 9 (996.34 seconds)
+Cbc0010I After 4800 nodes, 13 on tree, 20 best solution, best possible 9 (1015.48 seconds)
+Cbc0010I After 4900 nodes, 18 on tree, 20 best solution, best possible 9 (1033.35 seconds)
+Cbc0010I After 5000 nodes, 14 on tree, 20 best solution, best possible 9 (1054.76 seconds)
+Cbc0010I After 5100 nodes, 11 on tree, 20 best solution, best possible 9 (1069.04 seconds)
+Cbc0010I After 5200 nodes, 12 on tree, 20 best solution, best possible 9 (1086.63 seconds)
+Cbc0010I After 5300 nodes, 23 on tree, 20 best solution, best possible 9 (1104.44 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 374 rows 125 columns
+Cbc0010I After 5400 nodes, 40 on tree, 20 best solution, best possible 9 (1120.48 seconds)
+Cbc0010I After 5500 nodes, 37 on tree, 20 best solution, best possible 9 (1134.75 seconds)
+Cbc0010I After 5600 nodes, 36 on tree, 20 best solution, best possible 9 (1150.38 seconds)
+Cbc0010I After 5700 nodes, 36 on tree, 20 best solution, best possible 9 (1167.31 seconds)
+Cbc0010I After 5800 nodes, 24 on tree, 20 best solution, best possible 9 (1185.27 seconds)
+Cbc0010I After 5900 nodes, 23 on tree, 20 best solution, best possible 9 (1201.15 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 392 rows 131 columns
+Cbc0010I After 6000 nodes, 30 on tree, 20 best solution, best possible 9 (1217.15 seconds)
+Cbc0010I After 6100 nodes, 18 on tree, 20 best solution, best possible 9 (1231.15 seconds)
+Cbc0010I After 6200 nodes, 21 on tree, 20 best solution, best possible 9 (1248.22 seconds)
+Cbc0010I After 6300 nodes, 16 on tree, 20 best solution, best possible 9 (1262.60 seconds)
+Cbc0010I After 6400 nodes, 16 on tree, 20 best solution, best possible 9 (1276.98 seconds)
+Cbc0010I After 6500 nodes, 24 on tree, 20 best solution, best possible 9 (1298.60 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 367 rows 138 columns
+Cbc0010I After 6600 nodes, 18 on tree, 20 best solution, best possible 9 (1318.35 seconds)
+Cbc0010I After 6700 nodes, 14 on tree, 20 best solution, best possible 9 (1334.09 seconds)
+Cbc0010I After 6800 nodes, 12 on tree, 20 best solution, best possible 9 (1351.52 seconds)
+Cbc0010I After 6900 nodes, 12 on tree, 20 best solution, best possible 9 (1368.35 seconds)
+Cbc0010I After 7000 nodes, 5 on tree, 20 best solution, best possible 9 (1387.09 seconds)
+Cbc0010I After 7100 nodes, 20 on tree, 20 best solution, best possible 9 (1402.75 seconds)
+Cbc0010I After 7200 nodes, 14 on tree, 20 best solution, best possible 9 (1416.86 seconds)
+Cbc0010I After 7300 nodes, 19 on tree, 20 best solution, best possible 9 (1429.86 seconds)
+Cbc0010I After 7400 nodes, 10 on tree, 20 best solution, best possible 9 (1442.06 seconds)
+Cbc0010I After 7500 nodes, 5 on tree, 20 best solution, best possible 9 (1456.47 seconds)
+Cbc0010I After 7600 nodes, 5 on tree, 20 best solution, best possible 9 (1469.69 seconds)
+Cbc0010I After 7700 nodes, 8 on tree, 20 best solution, best possible 9 (1483.60 seconds)
+Cbc0010I After 7800 nodes, 4 on tree, 20 best solution, best possible 9 (1497.46 seconds)
+Cbc0038I Full problem 3914 rows 1960 columns, reduced to 376 rows 132 columns
+Cbc0004I Integer solution of 10 found after 2925277 iterations and 7840 nodes (1507.59 seconds)
+Cbc0001I Search completed - best objective 10, took 2925277 iterations and 7840 nodes (1507.59 seconds)
+Cbc0032I Strong branching done 19532 times (1265419 iterations), fathomed 78 nodes and fixed 1025 variables
+Cbc0035I Maximum depth 54, 0 variables fixed on reduced cost
+Cuts at root node changed objective from 0.97228 to 5
+Probing was tried 5582 times and created 400308 cuts of which 0 were active after adding rounds of cuts (28.746 seconds)
+Gomory was tried 5519 times and created 417 cuts of which 0 were active after adding rounds of cuts (25.850 seconds)
+Knapsack was tried 12 times and created 2 cuts of which 0 were active after adding rounds of cuts (0.078 seconds)
+Clique was tried 12 times and created 17 cuts of which 0 were active after adding rounds of cuts (0.047 seconds)
+MixedIntegerRounding2 was tried 12 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.070 seconds)
+FlowCover was tried 12 times and created 0 cuts of which 0 were active after adding rounds of cuts (0.027 seconds)
+TwoMirCuts was tried 5519 times and created 3964 cuts of which 0 were active after adding rounds of cuts (14.016 seconds)
+ZeroHalf was tried 5519 times and created 14114 cuts of which 0 were active after adding rounds of cuts (125.950 seconds)
+ImplicationCuts was tried 80 times and created 253 cuts of which 0 were active after adding rounds of cuts (0.021 seconds)
+
+Result - Optimal solution found
+
+Objective value:                10.00000000
+Enumerated nodes:               7840
+Total iterations:               2925277
+Time (CPU seconds):             1506.82
+Time (Wallclock seconds):       1508.20
+
+Option for printingOptions changed from normal to all
+Total time (CPU seconds):       1506.94   (Wallclock seconds):       1508.36
+
+end constraints done
+general activity object constraints done
+duration constraints done
+resource constraints done
+
+Time slot  0
+record claim  on object  2 ( claim )  with  -
+record claim  on object  2 ( claim )  with  Emil
+record claim  on object  3 ( claim )  with  -
+record claim  on object  3 ( claim )  with  Willy
+record claim  on object  4 ( claim )  with  -
+record claim  on object  4 ( claim )  with  Wanda
+
+Time slot  1
+record claim  on object  0 ( claim )  with  -
+record claim  on object  0 ( claim )  with  Wanda
+question claim (request assessment)  on object  3 ( claim )  with  -
+question claim (request assessment)  on object  3 ( claim )  with  Willy
+question claim (request assessment)  on object  4 ( claim )  with  -
+question claim (request assessment)  on object  4 ( claim )  with  Emil
+question claim (request assessment)  on object  6 ( assessment )  with  -
+question claim (request assessment)  on object  6 ( assessment )  with  Emil
+question claim (request assessment)  on object  8 ( assessment )  with  -
+question claim (request assessment)  on object  8 ( assessment )  with  Willy
+
+Time slot  2
+record claim  on object  5 ( claim )  with  -
+record claim  on object  5 ( claim )  with  Wanda
+assess claim  on object  8 ( assessment )  with  -
+assess claim  on object  8 ( assessment )  with  Emil
+question claim (basic)  on object  2 ( claim )  with  -
+question claim (basic)  on object  2 ( claim )  with  Willy
+
+Time slot  3
+record claim  on object  1 ( claim )  with  -
+record claim  on object  1 ( claim )  with  Wanda
+assess claim  on object  6 ( assessment )  with  -
+assess claim  on object  6 ( assessment )  with  Erika
+question claim (basic)  on object  5 ( claim )  with  -
+question claim (basic)  on object  5 ( claim )  with  Willy
+
+Time slot  4
+question claim (basic)  on object  1 ( claim )  with  -
+question claim (basic)  on object  1 ( claim )  with  Willy
+decide claim (basic)  on object  2 ( claim )  with  -
+decide claim (basic)  on object  2 ( claim )  with  Wanda
+decide claim (basic)  on object  2 ( claim )  with  Emil
+
+Time slot  5
+question claim (request assessment)  on object  0 ( claim )  with  -
+question claim (request assessment)  on object  0 ( claim )  with  Wanda
+question claim (request assessment)  on object  7 ( assessment )  with  -
+question claim (request assessment)  on object  7 ( assessment )  with  Wanda
+decide claim (basic)  on object  5 ( claim )  with  -
+decide claim (basic)  on object  5 ( claim )  with  Willy
+decide claim (basic)  on object  5 ( claim )  with  Emil
+
+Time slot  6
+assess claim  on object  7 ( assessment )  with  -
+assess claim  on object  7 ( assessment )  with  Erika
+decide claim (with assessment)  on object  0 ( claim )  with  -
+decide claim (with assessment)  on object  0 ( claim )  with  Willy
+decide claim (with assessment)  on object  0 ( claim )  with  Emil
+decide claim (with assessment)  on object  6 ( assessment )  with  -
+decide claim (with assessment)  on object  6 ( assessment )  with  Willy
+decide claim (with assessment)  on object  6 ( assessment )  with  Emil
+
+Time slot  7
+decide claim (with assessment)  on object  3 ( claim )  with  -
+decide claim (with assessment)  on object  3 ( claim )  with  Willy
+decide claim (with assessment)  on object  3 ( claim )  with  Emil
+decide claim (with assessment)  on object  8 ( assessment )  with  -
+decide claim (with assessment)  on object  8 ( assessment )  with  Willy
+decide claim (with assessment)  on object  8 ( assessment )  with  Emil
+
+Time slot  8
+decide claim (with assessment)  on object  4 ( claim )  with  -
+decide claim (with assessment)  on object  4 ( claim )  with  Willy
+decide claim (with assessment)  on object  4 ( claim )  with  Emil
+decide claim (with assessment)  on object  7 ( assessment )  with  -
+decide claim (with assessment)  on object  7 ( assessment )  with  Willy
+decide claim (with assessment)  on object  7 ( assessment )  with  Emil
+
+Time slot  9
+decide claim (basic)  on object  1 ( claim )  with  -
+decide claim (basic)  on object  1 ( claim )  with  Willy
+decide claim (basic)  on object  1 ( claim )  with  Emil
+
+Time slot  10
+finish  on object  0 ( claim )  with  -
+finish  on object  1 ( claim )  with  -
+finish  on object  2 ( claim )  with  -
+finish  on object  3 ( claim )  with  -
+finish  on object  4 ( claim )  with  -
+finish  on object  5 ( claim )  with  -
+finish  on object  6 ( assessment )  with  -
+finish  on object  7 ( assessment )  with  -
+finish  on object  8 ( assessment )  with  -
+
+Time slot  11
+
+Time slot  12
+
+Time slot  13
+
+Time slot  14
+
+Time slot  15
+
+Time slot  16
+
+Time slot  17
+
+Time slot  18
+
+Time slot  19
+
+Time slot  20
